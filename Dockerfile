@@ -27,13 +27,14 @@ RUN mkdir -p /certs
 COPY certs/fd_transcendence.key /usr/src/app/certs/fd_transcendence.key
 COPY certs/fd_transcendence.crt /usr/src/app/certs/fd_transcendence.crt
 
+# Crear carpeta data si no existe
+RUN mkdir -p /usr/src/app/data
+
 # Rebuild better-sqlite3 si es necesario
 RUN npm rebuild better-sqlite3
 
 # Exponer el puerto del servidor que vols que corri
-EXPOSE 3000
-# HTTP (opcional)
-# EXPOSE 8080
+EXPOSE 3000 8080 8082
 
 # Arrancar el servidor
-CMD ["node", "index.js"]
+CMD ["sh", "-c", "node src/microservices/game/server.js & node src/microservices/websocket/server.js & node src/microservices/api/server.js & wait"]

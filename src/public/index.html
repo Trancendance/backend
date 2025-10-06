@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transcendence Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .service { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .online { background: #d4edda; color: #155724; }
+        .offline { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Transcendence Services Status</h1>
+    
+    <div id="services">
+        <div class="service" id="api">API Server: Checking...</div>
+        <div class="service" id="game">Game Server: Checking...</div>
+        <div class="service" id="frontend">Frontend: Checking...</div>
+    </div>
+
+    <script>
+        async function checkService(url, id) {
+            try {
+                const response = await fetch(url);
+                const element = document.getElementById(id);
+                element.textContent = `${id.toUpperCase()}: ✅ Online`;
+                element.className = 'service online';
+            } catch (error) {
+                const element = document.getElementById(id);
+                element.textContent = `${id.toUpperCase()}: ❌ Offline`;
+                element.className = 'service offline';
+            }
+        }
+
+        // Check services
+        checkService('https://localhost:3000/health', 'api');
+        checkService('https://localhost:8080/', 'game');
+        checkService('https://localhost:8082/', 'chat ')
+        checkService('https://localhost:8081/', 'frontend');
+    </script>
+</body>
+</html>
