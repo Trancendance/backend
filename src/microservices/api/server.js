@@ -22,7 +22,7 @@ const fastify = Fastify({
   https: httpsOptions
 });
 
-// CORS
+// CORS millorar poc segur, deixa entrar a tothom
 fastify.addHook('onRequest', (request, reply, done) => {
   reply.header('Access-Control-Allow-Origin', '*');
   reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
