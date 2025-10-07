@@ -1,0 +1,17 @@
+└── api/
+    │       ├── server.js
+    │       ├── routes/
+    │       │   ├── index.js
+    │       │   ├── users.js
+    │       │   └── health.js
+    │       ├── middleware/
+    │       │   ├── cors.js
+    │       │   └── validation.js
+    │       ├── controllers/
+    │       │   └── usersController.js
+    │       ├── models/
+    │       │   └── userModel.js
+    │       ├── config/
+    │       │   └── database.js
+    │       └── utils/
+    │           └── helpers.js

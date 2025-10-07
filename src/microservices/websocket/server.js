@@ -44,6 +44,10 @@ fastify.get("/", async (req, reply) => {
   `);
 });
 
+fastify.get('/ws-health', async (request, reply) => {
+  reply.send({ service: 'WebSocket', status: 'OK' });
+});
+
 // Serve test chat client
 fastify.get("/test-chat.html", async (req, reply) => {
   const htmlContent = `

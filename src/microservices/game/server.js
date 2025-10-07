@@ -40,6 +40,10 @@ fastify.get("/", async (req, reply) => {
   reply.type("text/html").send(htmlContent);
 });
 
+fastify.get('/game-health', async (request, reply) => {
+  reply.send({ service: 'Game', status: 'OK' });
+});
+
 // Status page
 fastify.get("/status", async (req, reply) => {
   reply.type('text/html').send(`

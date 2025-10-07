@@ -37,4 +37,4 @@ RUN npm rebuild better-sqlite3
 EXPOSE 3000 8080 8082
 
 # Arrancar el servidor
-CMD ["sh", "-c", "node src/microservices/game/server.js & node src/microservices/websocket/server.js & node src/microservices/api/server.js & wait"]
+CMD ["sh", "-c", "node src/microservices/game/server.js & node src/microservices/websocket/server.js & wait"]

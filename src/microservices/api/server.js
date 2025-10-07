@@ -1,9 +1,9 @@
 // backend/src/microservices/api/server.js
 import Fastify from 'fastify';
-import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import db from './database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,35 +34,26 @@ fastify.addHook('onRequest', (request, reply, done) => {
   done();
 });
 
-// Database - RUTA CORREGIDA
-const dbPath = '/usr/src/app/data/transcendence.db';
-console.log('📁 Database path:', dbPath);
-
-// SOLO UNA declaración de db
-const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
-
-// Inicializar tablas si no existen
-db.exec(`
-  CREATE TABLE IF NOT EXISTS player (
-    player_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    alias TEXT UNIQUE NOT NULL,
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL DEFAULT 'default_hash',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
-// Health check
+//https://3000/health
 fastify.get('/health', async (request, reply) => {
-  reply.send({ 
-    status: 'OK', 
-    service: 'API Server', 
-    port: 3000,
-    database: 'Connected'
-  });
+  try {
+    // Verificar que la BD responde
+    db.prepare('SELECT 1 as test').get();
+    reply.send({ 
+      status: 'OK', 
+      service: 'API Server', 
+      port: 3000,
+      database: 'Connected'
+    });
+  } catch (error) {
+    console.error('Database health check failed:', error);
+    reply.status(500).send({ 
+      status: 'ERROR', 
+      service: 'API Server',
+      database: 'Disconnected',
+      error: error.message 
+    });
+  }
 });
 
 // API Routes
