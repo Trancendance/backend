@@ -15,3 +15,19 @@
     │       │   └── database.js
     │       └── utils/
     │           └── helpers.js
+
+QUE ES GUARDI/CANVI EN EL MOMENT
+    ./ -> make up-dev
+    ./backend -> npm install && npm run dev
+
+MIRAR database
+docker exec -it transcendence_db /bin/sh o make shell-database
+
+# Obrir la base de dades
+sqlite3 data/transcendence.db
+
+# Dins de sqlite3:
+.tables                    # Veure totes les taules
+.schema users              # Veure estructura taula users
+SELECT * FROM users;       # Veure contingut taula users
+.quit                      # Sortir de sqlite3
