@@ -3,3 +3,7 @@
 ./certs
 ./certs/*
 .env
+../frontend/certs
+../frontend/certs/*
+../rootCA
+../rootCA/*
