@@ -34,7 +34,11 @@ RUN mkdir -p /usr/src/app/data
 RUN npm rebuild better-sqlite3
 
 # Exponer el puerto del servidor que vols que corri
-EXPOSE 3000 8080 8082
+EXPOSE 8080 8082
+
+# Variables para proxy interno
+ENV DB_URL=https://transcendence_db:3000
+ENV ALLOW_SELF_SIGNED=true
 
 # Arrancar el servidor
-CMD ["sh", "-c", "node src/microservices/game/server.js & node src/microservices/websocket/server.js & wait"]
+CMD ["sh", "-c", "node src/microservices/gateway/server.js & node src/microservices/websocket/server.js & wait"]
