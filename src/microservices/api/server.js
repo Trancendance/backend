@@ -8,6 +8,7 @@ import db from '../database.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const PORT = process.env.PORT || 3000;
 
 // Certificats HTTPS
 const keyPath = path.join(__dirname, '../../../certs/fd_transcendence.key');
@@ -126,8 +127,9 @@ fastify.get('/', async (request, reply) => {
     <html>
       <body>
         <h1> API Server</h1>
-        <p>Puerto: 3000</p>
+        <p>Puerto: ${PORT}</p>
         <p>Servicio funcionando correctamente</p>
+        <p>Environment: ${process.env.NODE_ENV || 'development'}</p>
         <a href="/health">Health Check</a> | 
         <a href="/api">API Players</a>
       </body>
@@ -137,8 +139,8 @@ fastify.get('/', async (request, reply) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: 3000, host: '0.0.0.0' });
-    console.log('🚀 API Server en https://localhost:3000');
+    await fastify.listen({ port: PORT, host: '0.0.0.0' });
+    console.log(`🚀 API Server en https://localhost:${PORT}`);
   } catch (err) {
     console.error(err);
     process.exit(1);
