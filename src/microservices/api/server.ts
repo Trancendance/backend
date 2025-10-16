@@ -1,9 +1,10 @@
-// backend/src/microservices/api/server.js
-import Fastify from 'fastify';
+// backend/src/microservices/api/server.ts
+import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import db from '../database.js';
+
+const db: any = (await import('../database.js')).default;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +26,7 @@ const fastify = Fastify({
 });
 
 // CORS millorar poc segur, deixa entrar a tothom
-fastify.addHook('onRequest', (request, reply, done) => {
+fastify.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done) => {
   reply.header('Access-Control-Allow-Origin', '*');
   reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   reply.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -37,7 +38,7 @@ fastify.addHook('onRequest', (request, reply, done) => {
 });
 
 //https://3000/health
-fastify.get('/health', async (request, reply) => {
+fastify.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     // Verificar que la BD responde
     db.prepare('SELECT 1 as test').get();
@@ -47,7 +48,7 @@ fastify.get('/health', async (request, reply) => {
       port: 3000,
       database: 'Connected'
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Database health check failed:', error);
     reply.status(500).send({ 
       status: 'ERROR', 
@@ -58,11 +59,39 @@ fastify.get('/health', async (request, reply) => {
   }
 });
 
-// API Routes
-fastify.all('/api', async (request, reply) => {
+// Carregar routers dinàmicament
+const routerFiles = fs.readdirSync(path.resolve(__dirname, './routers'));
+
+for (const file of routerFiles) {
+  if (!file.match(/\.(js|ts)$/))
+    continue;
+  
+  console.log(file);
+  const name = `/${file.replace(/\.(js|ts)$/, '').replace(/index/, '')}`;
+  
+  try {
+    const modulePath = path.resolve(__dirname, './routers', file);
+    
+    if (name === '/register') {
+      const registerRouter = await import(modulePath);
+      fastify.register(registerRouter.default || registerRouter, { prefix: name });
+    } else {
+      const routerModule = await import(modulePath);
+      fastify.register(routerModule.default || routerModule, { prefix: name });
+    }
+    
+    console.log('Loaded router', name, 'from', file);
+  } catch (error: any) {
+    console.error(`ERROR loading route of file ${file} error:`, error);
+  }
+}
+
+/*
+// API Routes - Comentat perquè ara es carreguen dinàmicament
+fastify.all('/api', async (request: FastifyRequest, reply: FastifyReply) => {
   const { method } = request;
-  const data = request.body;
-  const route = request.query.route || 'players';
+  const data = request.body as any;
+  const route = (request.query as any).route || 'players';
 
   if (route === 'players') {
     try {
@@ -112,7 +141,7 @@ fastify.all('/api', async (request, reply) => {
         default:
           reply.status(405).send({ success: false, message: 'Método no permitido' });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error:', err);
       reply.status(500).send({ success: false, message: 'Error interno' });
     }
@@ -120,9 +149,10 @@ fastify.all('/api', async (request, reply) => {
     reply.status(404).send({ success: false, message: 'Ruta no encontrada' });
   }
 });
+*/
 
 // Status page
-fastify.get('/', async (request, reply) => {
+fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
   reply.type('text/html').send(`
     <html>
       <body>
@@ -139,7 +169,7 @@ fastify.get('/', async (request, reply) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: PORT, host: '0.0.0.0' });
+    await fastify.listen({ port: Number(PORT), host: '0.0.0.0' });
     console.log(`🚀 API Server en https://localhost:${PORT}`);
   } catch (err) {
     console.error(err);

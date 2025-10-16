@@ -41,4 +41,4 @@ ENV DB_URL=https://transcendence_db:3000
 ENV ALLOW_SELF_SIGNED=true
 
 # Arrancar el servidor
-CMD ["sh", "-c", "node src/microservices/gateway/server.js & node src/microservices/websocket/server.js & wait"]
+CMD ["sh", "-c", "node dist/microservices/gateway/server.js & node dist/microservices/websocket/server.js & wait"]
