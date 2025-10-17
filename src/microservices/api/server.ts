@@ -45,7 +45,7 @@ fastify.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
     reply.send({ 
       status: 'OK', 
       service: 'API Server', 
-      port: 3000,
+      port: `${PORT}`,
       database: 'Connected'
     });
   } catch (error: any) {
@@ -59,32 +59,28 @@ fastify.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
   }
 });
 
-// Carregar routers dinàmicament
-const routerFiles = fs.readdirSync(path.resolve(__dirname, './routers'));
-
-for (const file of routerFiles) {
-  if (!file.match(/\.(js|ts)$/))
-    continue;
-  
-  console.log(file);
-  const name = `/${file.replace(/\.(js|ts)$/, '').replace(/index/, '')}`;
-  
-  try {
-    const modulePath = path.resolve(__dirname, './routers', file);
+const loadRouters = async () => {
+  const routerFiles = fs.readdirSync(path.resolve(__dirname, './routers'));
+  for (const file of routerFiles) 
+  {
+    if (!file.match(/\.(js|ts)$/))
+      continue;
     
-    if (name === '/register') {
-      const registerRouter = await import(modulePath);
-      fastify.register(registerRouter.default || registerRouter, { prefix: name });
-    } else {
+    console.log(file);
+    const name = `/${file.replace(/\.(js|ts)$/, '').replace(/index/, '')}`;
+    
+    try {
+      const modulePath = `./routers/${file}`;
       const routerModule = await import(modulePath);
-      fastify.register(routerModule.default || routerModule, { prefix: name });
+      
+      fastify.register(routerModule.default || routerModule, {prefix: name});
+      
+      console.log('Loaded router', name, 'from', file);
+    } catch (error: any) {
+      console.error(`ERROR loading route of file ${file} error:`, error);
     }
-    
-    console.log('Loaded router', name, 'from', file);
-  } catch (error: any) {
-    console.error(`ERROR loading route of file ${file} error:`, error);
   }
-}
+};
 
 /*
 // API Routes - Comentat perquè ara es carreguen dinàmicament
@@ -169,6 +165,7 @@ fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
 
 const start = async () => {
   try {
+    await loadRouters();
     await fastify.listen({ port: Number(PORT), host: '0.0.0.0' });
     console.log(`🚀 API Server en https://localhost:${PORT}`);
   } catch (err) {
