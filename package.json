@@ -5,8 +5,11 @@
   "scripts": {
     "start": "./generate-certificate.sh && node dist/microservices/api/server.js",
     "build": "tsc -p tsconfig.json",
-    "dev": "PORT=3001 ts-node --esm src/microservices/api/server.js",
-    "dev:watch": "PORT=3001 nodemon --exec \"ts-node --esm src/microservices/api/server.js\""
+    "dev": "PORT=3001 tsx src/microservices/api/server.ts",
+    "dev:watch": "PORT=3001 nodemon --exec \"tsx src/microservices/api/server.ts\"",
+    "clean": "rm -rf dist node_modules package-lock.json && npm install",
+    "fresh": "npm run clean && npm run build && npm run dev:watch",
+    "fclean": "rm -rf dist node_modules package-lock.json"
   },
   "dependencies": {
     "@fastify/static": "^8.0.1",
@@ -19,6 +22,7 @@
     "@types/node": "^24.8.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }
 }
