@@ -11,21 +11,40 @@ export class User {
         const tableExists = this.db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='player'`).get();
 
         if (tableExists) {
-            console.log("Base de dades ja inizialitzada", tableExists);
-            return;
+            console.log("✅ Taula 'player' existeix");
+            return true;
+        }
+        console.log("❌ Taula 'player' NO existeix");
+        return false;
+    };
+
+    async getByAlias(alias: string) {
+        try {
+            const stmt = this.db.prepare('SELECT *FROM player WHERE alias = ?');
+            return stmt.get(alias);
+        } catch (error: any) {
+            throw new Error(`Error buscant els alias ${error.message}`);
         }
     };
 
-    async create(UserData: {alias: string, first_name: string, last_name: string, email: string, image_path: string/*, creation_date: Date */}) {
-            //timestamp calcular aqui
-            // const event = new Date(Date.UTC(2012, 11, 20, 3, 0, 0));
+    async getByEmail(email: string) {
+        try {
+            const stmt = this.db.prepare('SELECT *FROM player WHERE email = ?');
+            return stmt.get(email);
+        } catch (error: any) {
+            throw new Error(`Error buscant per email: ${error.message}`);
+        };
+    };
 
-            // // British English uses day-month-year order and 24-hour time without AM/PM
-            // console.log(event.toLocaleString("en-GB", { timeZone: "UTC" }));
-            // // Expected output: "20/12/2012, 03:00:00"
-            const db: any = (await import('../../database.js')).default;
-            const currentTime = db.prepare(`SELECT CURRENT_TIMESTAMP;`).get();
-
+    async create(UserData: {alias: string, first_name: string, last_name: string, email: string, image_path: string}) {
+        // const db: any = (await import('../../database.js')).default;
+        // const currentTime = db.prepare(`SELECT CURRENT_TIMESTAMP;`).get();
+        try {
             //afefgir a la bbdd
+            this.db.prepare(`INSERT INTO player(alias, first_name, last_name, email, image_path, creation_date) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`);
+        } catch (error: any) {
+            throw new Error(`Error creant usuari: ${error.message}`);
+        }
     };
 }
+export default User;
