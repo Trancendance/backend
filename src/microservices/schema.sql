@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS player (
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
     image_path TEXT NOT NULL DEFAULT '../../public/assets/img/default.png',
     creation_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status INTEGER NOT NULL DEFAULT 0,

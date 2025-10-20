@@ -15,6 +15,7 @@ WORKDIR /usr/src/app
 
 # PRIMERO copiar package.json para cache de dependencias
 COPY package*.json ./
+COPY tsconfig.json ./
 
 # Instalar dependencias
 RUN npm install
@@ -27,6 +28,7 @@ RUN mkdir -p /certs
 COPY certs/fd_transcendence.key /usr/src/app/certs/fd_transcendence.key
 COPY certs/fd_transcendence.crt /usr/src/app/certs/fd_transcendence.crt
 
+RUN npm run build
 # Crear carpeta data si no existe
 RUN mkdir -p /usr/src/app/data
 
@@ -41,4 +43,4 @@ ENV DB_URL=https://transcendence_db:3000
 ENV ALLOW_SELF_SIGNED=true
 
 # Arrancar el servidor
-CMD ["sh", "-c", "node src/microservices/gateway/server.js & node src/microservices/websocket/server.js & wait"]
+CMD ["sh", "-c", "node dist/microservices/gateway/server.js & node dist/microservices/websocket/server.js & wait"]
