@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import userRouter from "../routers/user";
-import { User } from "../models/user"; // Importa la CLASSE
+// import userRouter from "../routers/user";
+import { User } from "../models/user.js"; // Importa la CLASSE
 const db: any = (await import('../../database.js')).default;
 const userModel = new User(db); // Crea una INSTÀNCIA
 
@@ -8,7 +8,7 @@ const userController = {
     create: async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const userData = request.body as any;
-            
+
             // Validacions bàsiques
             if (!userData.alias || !userData.first_name || !userData.last_name || !userData.email) {
                 return reply.status(400).send({
@@ -42,6 +42,7 @@ const userController = {
                 email: userData.email,
                 image_path: userData.image_path
             });
+            
         } catch (error: any) {
             reply.status(500).send(
             {

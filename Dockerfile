@@ -1,7 +1,6 @@
 # Imagen base oficial de Node.js
 FROM node:20-slim
 
-
 # Instalar dependencias necesarias para better-sqlite3
 RUN apt-get update && apt-get install -y \
     sqlite3 \
@@ -13,20 +12,11 @@ RUN apt-get update && apt-get install -y \
 # Crear directorio de trabajo
 WORKDIR /usr/src/app
 
-# PRIMERO copiar package.json para cache de dependencias
-COPY package*.json ./
-COPY tsconfig.json ./
-
-# Instalar dependencias
-RUN npm install
-
 # Copiar backend
 COPY . .
 
-RUN mkdir -p /certs
-
-COPY certs/fd_transcendence.key /usr/src/app/certs/fd_transcendence.key
-COPY certs/fd_transcendence.crt /usr/src/app/certs/fd_transcendence.crt
+# Instalar dependencias
+RUN npm install
 
 RUN npm run build
 # Crear carpeta data si no existe

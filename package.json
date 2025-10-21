@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "./generate-certificate.sh && node dist/microservices/api/server.js",
-    "build": "tsc -p tsconfig.json",
+    "build": "npm run clean && tsc -p tsconfig.json",
     "dev": "PORT=3000 tsx src/microservices/api/server.ts",
     "dev:watch": "PORT=3000 nodemon --ext ts,js --exec \"tsx src/microservices/api/server.ts\"",
     "clean": "rm -rf dist node_modules package-lock.json && npm install",

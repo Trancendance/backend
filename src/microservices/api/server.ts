@@ -102,7 +102,7 @@ fastify.all('/api', async (request: FastifyRequest, reply: FastifyReply) => {
             return reply.status(400).send({ success: false, message: 'Datos incompletos' });
           }
           const stmt = db.prepare(
-            'INSERT INTO player (alias, first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?, ?)'
+            'INSERT INTO player (alias, first_name, last_name, email) VALUES (?, ?, ?, ?)'
           );
           const res = stmt.run(data.alias, data.first_name, data.last_name, data.email, 'default_hash');
           reply.send({ success: true, message: 'Jugador añadido', id: res.lastID });
