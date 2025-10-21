@@ -19,6 +19,7 @@ COPY . .
 RUN npm install
 
 RUN npm run build
+
 # Crear carpeta data si no existe
 RUN mkdir -p /usr/src/app/data
 
