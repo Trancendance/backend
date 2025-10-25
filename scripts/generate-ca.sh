@@ -1,32 +1,32 @@
 #!/bin/bash
-# backend/scripts/generate-ca.sh - Genera la CA local fora del contenidor
+# backend/scripts/generate-ca.sh - Generates the local CA outside the container
 
-echo "🏗️  Generant CA local per a desenvolupament..."
+echo "Generating local CA for development..."
 
-# Canviar al directori del script per assegurar rutes relatives
+# Change to the script directory to ensure relative paths work
 cd "$(dirname "$0")/.."
 
 mkdir -p ../rootCA
 mkdir -p certs
 
-echo "[1/3] Generant clau privada de la CA..."
+echo "[1/3] Generating CA private key..."
 openssl genrsa -out ../rootCA/rootCA.key 2048
 
-echo "[2/3] Generant certificat de la CA..."
+echo "[2/3] Generating CA certificate..."
 openssl req -x509 -new -nodes -key ../rootCA/rootCA.key -sha256 -days 3650 \
   -out ../rootCA/rootCA.crt \
   -subj "/C=ES/ST=Catalonia/L=Barcelona/O=42Barcelona/OU=CA/CN=42LocalCA"
 
-echo "[3/3] Copiant certificats CA als directoris necessaris..."
+echo "[3/3] Copying CA certificates to required directories..."
 cp ../rootCA/rootCA.key certs/
 cp ../rootCA/rootCA.crt certs/
 cp ../rootCA/rootCA.crt ../frontend/certs/
 
-echo "✅ CA local generada correctament!"
-echo "📁 Fitxers creats:"
-echo "   - ../rootCA/rootCA.key (Clau privada CA)"
-echo "   - ../rootCA/rootCA.crt (Certificat CA)"
-echo "   - certs/rootCA.* (Còpies per al backend)"
+echo "Local CA successfully generated!"
+echo "Created files:"
+echo "  - ../rootCA/rootCA.key (CA private key)"
+echo "  - ../rootCA/rootCA.crt (CA certificate)"
+echo "  - certs/rootCA.* (Copies for the backend)"
 echo ""
-echo "💡 IMPORTANT: Instal·la '../rootCA/rootCA.crt' al teu navegador"
-echo "   Obre el fitxer i instal·la-lo com a Autoritat Certificadora de confiança"
+echo "IMPORTANT: Install '../rootCA/rootCA.crt' in your browser"
+echo " Open the file and install it as a trusted Certificate Authority"
