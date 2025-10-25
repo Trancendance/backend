@@ -1,54 +1,119 @@
-export class User {
+import { DataTypes, IntegerDataType, Model, Optional, Sequelize } from 'sequelize';
+import { sequelize } from '../../sequelize.js';
+
+//es per TypeScript, per donar-te seguretat de tipus i autocompletat.
+interface PlayerAtributes {
+    player_id: number;
+    alias: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    image_path: string;
+    creation_date: Date;
+    status: number;
+    active: boolean;
+};
+
+interface PlayerCreationAtributes extends Optional<PlayerAtributes, 'player_id'
+| 'first_name' | 'last_name' | 'image_path' | 'creation_date' | 'status' | 'active'> {};
+
+// cada instància de Player tindrà aquestes propietats, sense la interficie, TS no sabria que hi ha dins de player tot seria any
+// El ! definitive assignment assertion de TypeScript
+// Li estàs dient al compilador: “Confia en mi, aquest atribut segur que estarà definit en temps d’execució, encara que no el vegis inicialitzat ara.
+class Player extends Model<PlayerAtributes, PlayerCreationAtributes> implements PlayerAtributes {
+    public player_id!: number;
+    public alias!: string;
+    public first_name!: string;
+    public last_name!: string;
+    public email!: string;
+    public image_path!: string;
+    public creation_date!: Date;
+    public status!: number;
+    public active!: boolean;
+};
+
+Player.init(
+    {
+        player_id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        alias: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true
+        },
+        first_name: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        last_name: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        email: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true,
+            validate: {
+                isEmail: true
+            }
+        },
+        image_path: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: '../../public/assets/img/default.png'
+        },
+        creation_date: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW
+        },
+        status: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
+        active: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true
+        }
+    },
+    {
+        sequelize,
+        modelName: 'Player',
+        tableName: 'player',
+        timestamps: false
+    }
+);
+
+class User {
     private db: any;
 
     constructor(database: any) {
         this.db = database;
-        this.checkTable();
     };
 
-    private checkTable() {
-        //comprovar si existeix db
-        const tableExists = this.db.prepare(`SELECT * FROM sqlite_master WHERE type='table' AND name='player'`).get();
+    async getByAlias(alias: string): Promise<Player | null> {
+       return Player.findOne({ where: { alias } });
+    }
+    
+    async getByEmail(email: string): Promise<Player | null> {
+        return Player.findOne({ where: { email } });
+    }
 
-        if (tableExists) {
-            console.log("✅ Taula 'player' existeix", tableExists);
-            return true;
+    async addPlayer(data: { alias: string; first_name: string; last_name: string;
+        email: string; image_path?: string;
+        }): Promise<Player> {
+            return Player.create({ alias: data.alias, first_name: data.first_name,
+                last_name: data.last_name, email: data.email,
+                image_path: data.image_path || '../../public/assets/img/default.png',
+
+            });
         }
-        console.log("❌ Taula 'player' NO existeix");
-        return false;
-    };
+};
 
-    async getByAlias(alias: string) {
-        console.log("Model getByAlias");
-        try {
-            const stmt = this.db.prepare('SELECT *FROM player WHERE alias = ?');
-            return stmt.get(alias);
-        } catch (error: any) {
-            throw new Error(`Error buscant els alias ${error.message}`);
-        }
-    };
-
-    async getByEmail(email: string) {
-        console.log("Model getByEmail");
-        try {
-            const stmt = this.db.prepare('SELECT *FROM player WHERE email = ?');
-            return stmt.get(email);
-        } catch (error: any) {
-            throw new Error(`Error buscant per email: ${error.message}`);
-        };
-    };
-
-    async create(UserData: {alias: string, first_name: string, last_name: string, email: string, image_path: string}) {
-        // const db: any = (await import('../../database.js')).default;
-        // const currentTime = db.prepare(`SELECT CURRENT_TIMESTAMP;`).get();
-        console.log("Model create");
-        try {
-            //afefgir a la bbdd
-            const stmt = this.db.prepare(`INSERT INTO player(alias, first_name, last_name, email, image_path, creation_date) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`);
-            stmt.run(UserData.alias, UserData.first_name, UserData.last_name, UserData.email, UserData.image_path);
-        } catch (error: any) {
-            throw new Error(`Error creant usuari: ${error.message}`);
-        }
-    };
-}
+export { Player };
 export default User;

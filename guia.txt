@@ -1,0 +1,31 @@
+NO PREGUNTI ACCEPT RISK CERTIFICAT ROOTCA
+make generate-ca
+
+Possar certificat rootCA.crt al firefox about:preferences#privacy o google chrome://certificate-manager/localcerts/usercerts
+
+make
+
+
+QUE ES GUARDI/CANVI EN EL MOMENT AMB POSTMAN sense fer compilar amb docker?? 
+
+comenta frontend i backend en el docker-compose
+
+./ -> make generate-certs
+
+./backend -> npm install && npm run build && npm run dev:watch
+
+potse veeure en https://localhost:3001/health
+
+MIRAR database
+docker exec -it transcendence_db /bin/sh o make shell-db
+
+docker run -it <image_continer> bash
+
+# Obrir la base de dades
+sqlite3 data/transcendence.db
+
+# Dins de sqlite3:
+.tables                    # Veure totes les taules
+.schema users              # Veure estructura taula users
+SELECT * FROM users;       # Veure contingut taula users
+.quit                      # Sortir de sqlite3

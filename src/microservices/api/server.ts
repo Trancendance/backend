@@ -3,8 +3,7 @@ import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-
-const db: any = (await import('../database.js')).default;
+import { sequelize } from '../sequelize.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,19 +40,19 @@ fastify.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done
 fastify.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     // Verificar que la BD responde
-    db.prepare('SELECT 1 as test').get();
+    await sequelize.authenticate();
     reply.send({ 
       status: 'OK', 
       service: 'API Server', 
       port: `${PORT}`,
-      database: 'Connected'
+      database: 'sequelize Connected'
     });
   } catch (error: any) {
     console.error('Database health check failed:', error);
     reply.status(500).send({ 
       status: 'ERROR', 
       service: 'API Server',
-      database: 'Disconnected',
+      database: 'sequelize Disconnected',
       error: error.message 
     });
   }
@@ -63,13 +62,17 @@ const loadRouters = async () => {
   const routerFiles = fs.readdirSync(path.resolve(__dirname, './routers'));
   for (const file of routerFiles) 
   {
-    if (!file.match(/\.(js|ts)$/))
+    // Solo cargar archivos .js, ignorar .d.ts, .ts y .map
+    if (!file.endsWith('.js') || file.endsWith('.d.ts') || file.endsWith('.ts') || file.endsWith('.map')) {
+      console.log(`Skipping non-JS file: ${file}`);
       continue;
+    }
     
     console.log(file);
-    const name = `/${file.replace(/\.(js|ts)$/, '').replace(/index/, '')}`;
+    // const name = `/${file.replace(/\.(js|ts)$/, '').replace(/index/, '')}`;
     
     try {
+      const name = `/${file.replace(/\.js$/, '').replace(/index/, '')}`;
       const modulePath = `./routers/${file}`;
       const routerModule = await import(modulePath);
       
@@ -81,71 +84,6 @@ const loadRouters = async () => {
     }
   }
 };
-
-/*
-// API Routes - Comentat perquè ara es carreguen dinàmicament
-fastify.all('/api', async (request: FastifyRequest, reply: FastifyReply) => {
-  const { method } = request;
-  const data = request.body as any;
-  const route = (request.query as any).route || 'players';
-
-  if (route === 'players') {
-    try {
-      switch (method) {
-        case 'GET':
-          const players = db.prepare('SELECT player_id, alias, first_name, last_name, email FROM player').all();
-          reply.send(players);
-          break;
-
-        case 'POST':
-          if (!data.alias || !data.first_name || !data.last_name || !data.email) {
-            return reply.status(400).send({ success: false, message: 'Datos incompletos' });
-          }
-          const stmt = db.prepare(
-            'INSERT INTO player (alias, first_name, last_name, email) VALUES (?, ?, ?, ?)'
-          );
-          const res = stmt.run(data.alias, data.first_name, data.last_name, data.email, 'default_hash');
-          reply.send({ success: true, message: 'Jugador añadido', id: res.lastID });
-          break;
-
-        case 'PUT':
-          if (!data.player_id) {
-            return reply.status(400).send({ success: false, message: 'ID requerido' });
-          }
-          const updateStmt = db.prepare('UPDATE player SET alias = ? WHERE player_id = ?');
-          const updateRes = updateStmt.run(data.alias, data.player_id);
-          if (updateRes.changes > 0) {
-            reply.send({ success: true, message: 'Jugador actualizado' });
-          } else {
-            reply.status(404).send({ success: false, message: 'Jugador no encontrado' });
-          }
-          break;
-
-        case 'DELETE':
-          if (!data.player_id) {
-            return reply.status(400).send({ success: false, message: 'ID requerido' });
-          }
-          const deleteStmt = db.prepare('DELETE FROM player WHERE player_id = ?');
-          const deleteRes = deleteStmt.run(data.player_id);
-          if (deleteRes.changes > 0) {
-            reply.send({ success: true, message: 'Jugador eliminado' });
-          } else {
-            reply.status(404).send({ success: false, message: 'Jugador no encontrado' });
-          }
-          break;
-
-        default:
-          reply.status(405).send({ success: false, message: 'Método no permitido' });
-      }
-    } catch (err: any) {
-      console.error('Error:', err);
-      reply.status(500).send({ success: false, message: 'Error interno' });
-    }
-  } else {
-    reply.status(404).send({ success: false, message: 'Ruta no encontrada' });
-  }
-});
-*/
 
 // Status page
 fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -165,8 +103,10 @@ fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
 
 const start = async () => {
   try {
-    await loadRouters();
-    await fastify.listen({ port: Number(PORT), host: '0.0.0.0' });
+    await sequelize.authenticate();//Comprova que pot connectar a la BBDD
+    await sequelize.sync();//Crea les taules automàticament segons els models
+    await loadRouters();//carrega le srutes
+    await fastify.listen({ port: Number(PORT), host: '0.0.0.0' });//inicia servidor
     console.log(`🚀 API Server en https://localhost:${PORT}`);
   } catch (err) {
     console.error(err);

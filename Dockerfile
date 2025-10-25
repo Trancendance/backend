@@ -20,9 +20,6 @@ RUN npm install
 
 RUN npm run build
 
-# Crear carpeta data si no existe
-RUN mkdir -p /usr/src/app/data
-
 # Rebuild better-sqlite3 si es necesario
 RUN npm rebuild better-sqlite3
 
