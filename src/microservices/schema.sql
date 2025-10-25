@@ -139,3 +139,37 @@ CREATE TABLE IF NOT EXISTS audit_log (
     timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (actor_id) REFERENCES player(player_id)
 );
+
+-- This is a table that stores unverified user until they verify their email, 
+-- the token will expire after 10 minutes
+-- and the user will be deleted from the table with a CRON job
+-- when the user verifies their email they will moved to the user table
+-- we will have to verify for email and alias uniqueness in both tables before accepting a new user request
+CREATE TABLE unverified_users (
+    user_id UUID NOT NULL,
+    alias TEXT NOT NULL,
+    email TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE login_magic_tokens (
+    token_id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    used BOOLEAN NOT NULL DEFAULT 0,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES player(player_id)
+);
+
+CREATE TABLE logged_in_tokens (
+    user_id UUID PRIMARY KEY,
+    login_time TIMESTAMP DEFAULT NOW(),
+    expires_at TIMESTAMP NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    FOREIGN KEY (user_id) REFERENCES player(player_id)
+);
+
+
