@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "npm run clean && npx tsc -p tsconfig.json && npm run copy-assets",
-    "copy-assets": "cp -r src/microservices/schema.sql dist/microservices/ && cp -r src/microservices/gateway dist/microservices/ && cp -r src/microservices/websocket dist/microservices/ && cp -r src/microservices/game dist/microservices/ && cp -r src/public dist/ && cp -r certs dist/",
+    "copy-assets": "cp -r src/microservices/gateway dist/microservices/ && cp -r src/microservices/websocket dist/microservices/ && cp -r src/microservices/game dist/microservices/ && cp -r src/public dist/ && cp -r certs dist/",
     "clean": "rm -rf dist && mkdir -p dist",
     "dev": "npx tsx watch src/microservices/api/server.ts",
     "fclean": "rm -rf dist node_modules package-lock.json",
@@ -16,7 +16,8 @@
     "better-sqlite3": "^12.2.0",
     "fastify": "^5.6.0",
     "sequelize": "^6.37.7",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

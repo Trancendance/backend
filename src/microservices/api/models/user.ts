@@ -5,8 +5,8 @@ import { sequelize } from '../../sequelize.js';
 interface PlayerAtributes {
     player_id: number;
     alias: string;
-    first_name: string;
-    last_name: string;
+    first_name: string | null;
+    last_name: string | null;
     email: string;
     image_path: string;
     creation_date: Date;
@@ -23,8 +23,8 @@ interface PlayerCreationAtributes extends Optional<PlayerAtributes, 'player_id'
 class Player extends Model<PlayerAtributes, PlayerCreationAtributes> implements PlayerAtributes {
     public player_id!: number;
     public alias!: string;
-    public first_name!: string;
-    public last_name!: string;
+    public first_name!: string | null;
+    public last_name!: string | null;
     public email!: string;
     public image_path!: string;
     public creation_date!: Date;
@@ -95,6 +95,14 @@ class User {
     constructor(database: any) {
         this.db = database;
     };
+
+    // async getAllAliasStatusActive(): Promise<Player | null> {
+    //     return Player.findAll({
+    //         where: {
+    //             status: 'active'
+    //         }
+    //     });
+    // }
 
     async getByAlias(alias: string): Promise<Player | null> {
        return Player.findOne({ where: { alias } });

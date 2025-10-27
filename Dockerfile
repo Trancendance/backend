@@ -2,6 +2,7 @@
 FROM node:20-slim
 
 # Instalar dependencias necesarias para better-sqlite3
+# possar --no-install-recommends per que vagi mes rapid
 RUN apt-get update && apt-get install -y \
     sqlite3 \
     python3 \
