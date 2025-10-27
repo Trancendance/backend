@@ -8,7 +8,7 @@ const userRouter: FastifyPluginAsync = async(fastify, options) => {
     
     //login mira a la llista 
     // 1. existeix envia token i succes, revisar mail ( url: ip/magick linc?token=<jwt token>)
-    // 2. no existe (error) 
+    // 2. no existe (error)
 
     //resposta estructura error: data: status:(success o error) message: (quan error) usser existe
 };

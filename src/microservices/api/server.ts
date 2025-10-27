@@ -104,7 +104,12 @@ fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
 const start = async () => {
   try {
     await sequelize.authenticate();//Comprova que pot connectar a la BBDD
-    await sequelize.sync();//Crea les taules automàticament segons els models
+    console.log('DB connexion done!');
+    // Inicializar modelos explícitamente
+    const { initializeModels } = await import('./models/index.js');
+    await initializeModels();
+
+    // await sequelize.sync({ force: false });//Crea les taules automàticament segons els models // force: false para no borrar datos existentes
     await loadRouters();//carrega le srutes
     await fastify.listen({ port: Number(PORT), host: '0.0.0.0' });//inicia servidor
     console.log(`🚀 API Server en https://localhost:${PORT}`);

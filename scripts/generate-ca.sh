@@ -7,7 +7,6 @@ echo "Generating local CA for development..."
 cd "$(dirname "$0")/.."
 
 mkdir -p ../rootCA
-mkdir -p ../certs
 
 echo "[1/3] Generating CA private key..."
 openssl genrsa -out ../rootCA/rootCA.key 2048
@@ -16,10 +15,6 @@ echo "[2/3] Generating CA certificate..."
 openssl req -x509 -new -nodes -key ../rootCA/rootCA.key -sha256 -days 3650 \
   -out ../rootCA/rootCA.crt \
   -subj "/C=ES/ST=Catalonia/L=Barcelona/O=42Barcelona/OU=CA/CN=42LocalCA"
-
-# echo "[3/3] Copying CA certificates to required directories..."
-# cp ../rootCA/rootCA.key certs/
-# cp ../rootCA/rootCA.crt certs/
 
 echo "Local CA successfully generated!"
 echo "Created files:"
