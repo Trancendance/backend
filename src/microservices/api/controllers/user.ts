@@ -12,11 +12,13 @@ const userController = {
     // 2. no existeix ni mail ni alias, crea -> enviar data: link con jwt (url: ip/magick linc?token=<jwt token> ) status:succes
     //resposta estructura error: data: status:(success o error) message: (quan error) usser existe
         try {
+            //validacions de que les dades que envien son correctes
             const userData = await registerSchema.validate(request.body as any, {
                 abortEarly: false,
                 stripUnknown: true // Elimina campos no definidos en el schema
             }) as RegisterInput;//correu no es valid pq ningu te aquest correu
             
+            //validacio de que les  dades alies i gmail no estan ja a la bbdd d'un atre usuari
             const existence = await checkUserExistence(userData.alias, userData.email);
             const existenceError = getUserExistenceError(existence);
 
@@ -31,8 +33,8 @@ const userController = {
             //crea -> enviar data: link con jwt (url: ip/magick link?token=<jwt token> ) status:succes
             await userModel.addPlayer({
                 alias: userData.alias,
-                first_name: userData.first_name || null,
-                last_name: userData.last_name || null, 
+                first_name: userData.first_name!,
+                last_name: userData.last_name!,
                 email: userData.email,
                 image_path: userData.image_path
             });
@@ -69,12 +71,13 @@ const userController = {
 };
 
 async function generateMagicLink(email: string): Promise<string> {
+
   // TODO: Implementar la generación real del JWT
   // Por ejemplo:
   // const token = await reply.jwtSign({ email }, { expiresIn: '15m' });
   // return `http://yourapp.com/magic-link?token=${token}`;
   
-  return `http://localhost:3000/magic-link?token=placeholder_jwt_token_for_${email}`;
+  return `https://localhost:3000/magic-link?token=placeholder_jwt_token_for_${email}`;
 }
 
 export default userController;

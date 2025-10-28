@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 yup.addMethod(yup.string, 'email', function validateEmail(message) {
   return this.matches(emailRegex, {
@@ -26,7 +26,10 @@ export const registerSchema = yup.object({
     .max(20, 'Last name too long'),
   image_path: yup.string()
     .optional()
-    .url('Image path must be a valid URL')
+    .matches(
+      /^(\.\.\/)*assets\/[a-zA-Z0-9_\-\.\/]+\.(png|jpg|jpeg|gif)$/,
+      'Image path must be a valid local path like assets/default.png'
+    )
 });
 
 export const loginSchema = yup.object({
