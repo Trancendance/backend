@@ -66,7 +66,7 @@ const userController = {
     }
     // login: async(request: FastifyRequest, reply: FastifyReply) => {
     // // 1. existeix envia token i succes, revisar mail ( url: ip/magick linc?token=<jwt token>)
-    //request.jwtVerify()
+    // request.jwtVerify();
     // // 2. no existe (error)
     // //resposta estructura error: data: status:(success o error) message: (quan error) usser existe
     // }
@@ -75,10 +75,9 @@ const userController = {
 async function generateMagicLink(email: string, reply: FastifyReply): Promise<string> {
 
     // TODO: Implementar la generación real del JWT
-    const token = singToken(email, reply);
-    console.log(`token generateMagicLink: ${token}`);
-    // return `http://yourapp.com/magic-link?token=${token}`;
-    return `https://localhost:3000/magic-link?token=${token}`;
+    const token = await singToken(email, reply);
+    // console.log('Token real:', token);
+    return (`https://localhost:3000/magic-link?token=${token}`);
 }
 
 export default userController;

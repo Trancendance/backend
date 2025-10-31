@@ -1,4 +1,3 @@
-import fastify from "../server.js";
 import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 
 export const singToken = (email:string, reply: FastifyReply) => {
@@ -11,13 +10,7 @@ export const singToken = (email:string, reply: FastifyReply) => {
     {
         expiresIn: '10m'
     });
-    console.log(`token singToken: ${token}`);
-    return token;
+    return token;//retorna una Promise<string>
 }
-//Crear un token JWT.
-
-// Enviar un correu.
-
-// Fer validacions complexes o transformacions de dades.
 
 export default singToken;
