@@ -1,5 +1,6 @@
 // backend/src/microservices/api/server.ts
 import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
+import fjwt from "@fastify/jwt";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -34,6 +35,13 @@ fastify.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done
     return;
   }
   done();
+});
+
+fastify.register(fjwt, {
+  secret: 'MARIA',
+  sign: {
+    expiresIn: '1h'
+  }
 });
 
 //https://3000/health
@@ -120,3 +128,5 @@ const start = async () => {
 };
 
 start();
+
+export default fastify;

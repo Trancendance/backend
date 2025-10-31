@@ -3,6 +3,7 @@ import User  from "../models/user.js"; // Importa la CLASSE
 import { error } from "console";
 import { checkUserExistence, getUserExistenceError } from "./userUtils.js";
 import { RegisterInput, registerSchema } from "./userValidation.js";
+import singToken from "../services/auth.js";
 
 const userModel = new User(null);
 
@@ -39,7 +40,7 @@ const userController = {
                 image_path: userData.image_path
             });
 
-            const magicLink = await generateMagicLink(userData.email);
+            const magicLink = await generateMagicLink(userData.email, reply);
 
             reply.send({
                 success: true,
@@ -59,25 +60,25 @@ const userController = {
             reply.status(500).send(
             {
                 success: false, 
-                error: error.message 
+                error: error.message
             });
         }
     }
     // login: async(request: FastifyRequest, reply: FastifyReply) => {
     // // 1. existeix envia token i succes, revisar mail ( url: ip/magick linc?token=<jwt token>)
+    //request.jwtVerify()
     // // 2. no existe (error)
     // //resposta estructura error: data: status:(success o error) message: (quan error) usser existe
     // }
 };
 
-async function generateMagicLink(email: string): Promise<string> {
+async function generateMagicLink(email: string, reply: FastifyReply): Promise<string> {
 
-  // TODO: Implementar la generación real del JWT
-  // Por ejemplo:
-  // const token = await reply.jwtSign({ email }, { expiresIn: '15m' });
-  // return `http://yourapp.com/magic-link?token=${token}`;
-  
-  return `https://localhost:3000/magic-link?token=placeholder_jwt_token_for_${email}`;
+    // TODO: Implementar la generación real del JWT
+    const token = singToken(email, reply);
+    console.log(`token generateMagicLink: ${token}`);
+    // return `http://yourapp.com/magic-link?token=${token}`;
+    return `https://localhost:3000/magic-link?token=${token}`;
 }
 
 export default userController;
