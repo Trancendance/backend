@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import User  from "../models/user.js"; // Importa la CLASSE
+import User, { Player }  from "../models/user.js"; // Importa la CLASSE
 import { error } from "console";
 import { checkUserExistence, getUserExistenceError } from "./userUtils.js";
 import { RegisterInput, registerSchema } from "./userValidation.js";
@@ -40,21 +40,21 @@ const userController = {
                 image_path: userData.image_path
             });
 
-            const magicLink = await generateMagicLink(userData.email, reply);
+            const magicLink = await generateMagicLink(userData.email, reply, true);
 
             reply.send({
                 success: true,
                 message: 'Magic link sent successfully',
                 data: {
-                magic_link: magicLink
+                    magic_link: magicLink
                 }
             });
         } catch (error: any) {
-            if (error.name === 'ValidationError') {
+            if (error.name === 'ValidationError') {//crec que mai entra aqui
                 return reply.status(400).send({
-                success: false,
-                error: 'Validation failed',
-                details: error.errors
+                    success: false,
+                    error: 'Validation failed',
+                    details: error.errors
                 });
             }
             reply.status(500).send(
@@ -64,20 +64,41 @@ const userController = {
             });
         }
     }
-    // login: async(request: FastifyRequest, reply: FastifyReply) => {
-    // // 1. existeix envia token i succes, revisar mail ( url: ip/magick linc?token=<jwt token>)
-    // request.jwtVerify();
-    // // 2. no existe (error)
-    // //resposta estructura error: data: status:(success o error) message: (quan error) usser existe
-    // }
+    login: async(request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            // 1. existeix envia token i succes, revisar mail ( url: ip/magick linc?token=<jwt token>)
+            const { email } = request.body as { email: string };
+
+            const getPlayer: Promise<Player | null> = userModel.getByEmail(email);
+            const player = await getPlayer;
+            if (player && player?.email === email)
+            {
+                const magicLink = await generateMagicLink(email, reply, false);
+                reply.send({
+                    success: true,
+                    message: 'magic link sended',
+                    data: magicLink
+                });
+            }
+        } catch (error: any){
+            // 2. no existe (error)
+            //resposta estructura error: data: status:(success o error) message: (quan error) usser existe
+            reply.status(500).send({
+                success: false,
+                error: error.message
+            });
+        }
+    }
 };
 
-async function generateMagicLink(email: string, reply: FastifyReply): Promise<string> {
-
-    // TODO: Implementar la generación real del JWT
-    const token = await singToken(email, reply);
-    // console.log('Token real:', token);
-    return (`https://localhost:3000/magic-link?token=${token}`);
+async function generateMagicLink(email: string, reply: FastifyReply, isRegister: boolean): Promise<string> {
+    if (isRegister) {
+        const token = await singToken(email, reply);
+        return `https://localhost:3000/magic-link?token=${token}`;
+    } else { // login
+        const token = await signIn(email, reply);
+        return `https://localhost:3000/magic-link?token=${token}`;
+    }
 }
 
 export default userController;

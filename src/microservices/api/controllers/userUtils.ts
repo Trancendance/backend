@@ -15,7 +15,7 @@ export const checkUserExistence = async (alias: string, email: string): Promise<
     ]);
 
     return {
-        aliasExists: !!existingAlias,
+        aliasExists: !!existingAlias,//
         emailExists: !!existingEmail
     };
 };
