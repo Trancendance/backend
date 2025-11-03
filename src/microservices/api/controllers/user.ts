@@ -3,7 +3,7 @@ import User, { Player }  from "../models/user.js"; // Importa la CLASSE
 import { error } from "console";
 import { checkUserExistence, getUserExistenceError } from "./userUtils.js";
 import { RegisterInput, registerSchema } from "./userValidation.js";
-import singToken from "../services/auth.js";
+import { singToken, signIn } from "../services/auth.js";
 
 const userModel = new User(null);
 
@@ -63,7 +63,7 @@ const userController = {
                 error: error.message
             });
         }
-    }
+    },
     login: async(request: FastifyRequest, reply: FastifyReply) => {
         try {
             // 1. existeix envia token i succes, revisar mail ( url: ip/magick linc?token=<jwt token>)
