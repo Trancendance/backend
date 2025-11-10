@@ -11,6 +11,16 @@ CREATE TABLE IF NOT EXISTS player (
     active INTEGER NOT NULL DEFAULT 1
 );
 
+CREATE TABLE IF NOT EXISTS tournament (
+    tournament_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    start_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_date DATETIME,
+    winner_id INTEGER,
+    blockchain_hash TEXT,
+    FOREIGN KEY (winner_id) REFERENCES player(player_id)
+);
+
 CREATE TABLE IF NOT EXISTS game (
     game_id INTEGER PRIMARY KEY AUTOINCREMENT,
     date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -31,16 +41,6 @@ CREATE TABLE IF NOT EXISTS game (
     FOREIGN KEY (player4_id) REFERENCES player(player_id),
     FOREIGN KEY (winner_id) REFERENCES player(player_id),
     FOREIGN KEY (tournament_id) REFERENCES tournament(tournament_id)
-);
-
-CREATE TABLE IF NOT EXISTS tournament (
-    tournament_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    start_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    end_date DATETIME,
-    winner_id INTEGER,
-    blockchain_hash TEXT,
-    FOREIGN KEY (winner_id) REFERENCES player(player_id)
 );
 
 CREATE TABLE IF NOT EXISTS tournament_participants (
