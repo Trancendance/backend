@@ -3,8 +3,7 @@ import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-
-const db: any = (await import('../database.js')).default;
+import db from '../database.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
