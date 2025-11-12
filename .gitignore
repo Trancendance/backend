@@ -5,3 +5,6 @@
 .env
 *.crt
 *.key
+/dist
+/dist/*
+.DS_Store
