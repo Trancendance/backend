@@ -98,9 +98,9 @@ class ChatService {
         user: client.user,
         timestamp: new Date().toLocaleTimeString()
       });
-      
       console.log(`👋 Chat client disconnected: ${client.user}`);
     }
+
   }
 
   // Handle incoming message
@@ -165,10 +165,23 @@ class ChatService {
 
   // Get current chat statistics
   public getStats(): { clients: number } {
+     //if steam tanca deleteTable();
+    // this.deleteTable;
+
     return {
       clients: this.clients.length
     };
   }
+
+
+  public deleteTable(): void {
+    const stmt = db.prepare(`
+        DROP TABLE temp_chat_messages
+      `);
+      stmt.run();
+    console.log("table temp deleted");
+  };
+
 }
 
 // Export singleton instance

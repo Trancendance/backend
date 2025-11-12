@@ -4,7 +4,7 @@ import websocketPlugin from "@fastify/websocket";
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { chatService } from './chat.js';
+import { chatService } from './tmpChat.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -103,7 +103,8 @@ fastify.get("/", async (req, reply) => {
                 <div id="messages"></div>
                 <div>
                     <input type="text" id="messageInput" placeholder="Type your message...">
-                    <button onclick="sendMessage()">Send</button>
+                    <button id="sendButton">Send</button>
+                    <button id="deleteButton">Delete</button>
                 </div>
             </div>
         </div>
@@ -164,21 +165,36 @@ fastify.get("/", async (req, reply) => {
                 }
             }
             
+            async function deleteTable() {
+                try {
+                    const response = await fetch('/chat/delete', {
+                        method: 'DELETE'
+                    });
+                    const res = await response.json();
+
+                    if (res.success) {
+                        console.log('Table deleted: ' + res.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + res.message);
+                    }
+                } catch (error) {
+                    console.error('Error deleting table', error);
+                    alert('Error al conectar server');
+                }
+            }
+            
             function addMessage(user, text, type, timestamp = new Date().toLocaleTimeString()) {
                 const messagesDiv = document.getElementById('messages');
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message';
                 
                 if (type === 'message') {
-                    messageDiv.innerHTML = \`
-                        <span class="timestamp">[\${timestamp}]</span>
-                        <span class="user">\${user}:</span> \${text}
-                    \`;
+                    messageDiv.innerHTML = '<span class="timestamp">[' + timestamp + ']</span> ' +
+                                          '<span class="user">' + user + ':</span> ' + text;
                 } else {
-                    messageDiv.innerHTML = \`
-                        <span class="timestamp">[\${timestamp}]</span>
-                        <em>\${text}</em>
-                    \`;
+                    messageDiv.innerHTML = '<span class="timestamp">[' + timestamp + ']</span> ' +
+                                          '<em>' + text + '</em>';
                     messageDiv.style.color = '#666';
                 }
                 
@@ -186,15 +202,21 @@ fastify.get("/", async (req, reply) => {
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }
             
-            // Handle Enter key press
-            document.getElementById('messageInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendMessage();
-                }
+            // Initialize when page loads
+            document.addEventListener('DOMContentLoaded', function() {
+                // Set up event listeners
+                document.getElementById('sendButton').addEventListener('click', sendMessage);
+                document.getElementById('deleteButton').addEventListener('click', deleteTable);
+                
+                document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+                
+                // Initialize connection when page loads - CORREGIDO: añadido ()
+                connectWebSocket();
             });
-            
-            // Initialize connection when page loads
-            window.onload = connectWebSocket;
         </script>
     </body>
     </html>
@@ -214,6 +236,7 @@ fastify.get('/ws-health', async (request, reply) => {
 // WebSocket chat endpoint
 fastify.get("/chat", { websocket: true }, (socket, req) => {
   const user = `User${Math.floor(Math.random() * 1000)}`;
+  //cal agafar alias i posar-lo com a usuari 
   
   // Add client to chat service
   chatService.addClient(socket, user);
@@ -235,12 +258,28 @@ fastify.get("/chat", { websocket: true }, (socket, req) => {
   });
 });
 
+fastify.delete("/chat/delete", async (request, reply) => {
+    try {
+        chatService.deleteTable();
+
+        reply.send({
+            success: true,
+            message: "table dropped",
+        });
+    } catch (err) {
+        console.error("ERROR: ", err, " in /chat/delete");
+        reply.status(500).send({
+            success: false,
+            message: "error al borrar table"
+        });
+    }
+});
+
 const start = async () => {
   try {
     await fastify.listen({ port: 8082, host: "0.0.0.0" });
     console.log("🚀 WebSocket Chat Server en:");
     console.log("   • HTTPS: https://localhost:8082");
-    console.log("   • WSS:   wss://localhost:8082/chat");
   } catch (err) {
     console.error(err);
     process.exit(1);
