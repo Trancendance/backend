@@ -165,9 +165,6 @@ class ChatService {
 
   // Get current chat statistics
   public getStats(): { clients: number } {
-     //if steam tanca deleteTable();
-    // this.deleteTable;
-
     return {
       clients: this.clients.length
     };
