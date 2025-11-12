@@ -20,6 +20,8 @@ RUN npm install
 
 RUN npm run build
 
+RUN cp src/microservices/schema.sql dist/microservices/schema.sql
+
 # Crear carpeta data si no existe
 RUN mkdir -p /usr/src/app/data
 
