@@ -1,5 +1,5 @@
-// backend/src/microservices/game/server.js
-import Fastify from "fastify";
+// backend/src/microservices/game/server.ts
+import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import websocketPlugin from "@fastify/websocket";
 import fs from 'fs';
 import path from 'path';
@@ -7,6 +7,47 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Interfaces
+interface Ball {
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+  r: number;
+}
+
+interface Paddle {
+  y: number;
+}
+
+interface Paddles {
+  left: Paddle;
+  right: Paddle;
+}
+
+interface Score {
+  left: number;
+  right: number;
+}
+
+interface GameState {
+  ball: Ball;
+  paddles: Paddles;
+  score: Score;
+}
+
+interface Client {
+  socket: any; // Usamos any para el socket de Fastify WebSocket
+  playerId: number | null;
+}
+
+interface WebSocketMessage {
+  type: string;
+  player?: number | null;
+  data?: GameState;
+  dy?: number;
+}
 
 // Certificats HTTPS
 const keyPath = path.join(__dirname, '../../../certs/fd_transcendence.key');
@@ -17,7 +58,7 @@ const httpsOptions = {
   cert: fs.readFileSync(certPath)
 };
 
-const fastify = Fastify({ 
+const fastify: FastifyInstance = Fastify({ 
   logger: true, 
   https: httpsOptions
 });
@@ -25,27 +66,27 @@ const fastify = Fastify({
 await fastify.register(websocketPlugin);
 
 // Game state
-let clients = [];
-let nextPlayer = 1;
-let gameState = {
+let clients: Client[] = [];
+let nextPlayer: number = 1;
+let gameState: GameState = {
   ball: { x: 300, y: 200, dx: 4, dy: 4, r: 10 },
   paddles: { left: { y: 150 }, right: { y: 150 } },
   score: { left: 0, right: 0 },
 };
 
 // Serve game client
-fastify.get("/", async (req, reply) => {
+fastify.get("/", async (req: FastifyRequest, reply: FastifyReply) => {
   const htmlPath = path.join(__dirname, '../../public/game.html');
   const htmlContent = fs.readFileSync(htmlPath, "utf8");
   reply.type("text/html").send(htmlContent);
 });
 
-fastify.get('/game-health', async (request, reply) => {
+fastify.get('/game-health', async (request: FastifyRequest, reply: FastifyReply) => {
   reply.send({ service: 'Game', status: 'OK' });
 });
 
 // Status page
-fastify.get("/status", async (req, reply) => {
+fastify.get("/status", async (req: FastifyRequest, reply: FastifyReply) => {
   reply.type('text/html').send(`
     <html>
       <body>
@@ -60,20 +101,24 @@ fastify.get("/status", async (req, reply) => {
 });
 
 // WebSocket game
-fastify.get("/wss", { websocket: true }, (socket, req) => {
-  const playerId = nextPlayer <= 2 ? nextPlayer++ : null;
+fastify.get("/wss", { websocket: true }, (socket: any, req: FastifyRequest) => {
+  const playerId: number | null = nextPlayer <= 2 ? nextPlayer++ : null;
   console.log(`Nuevo jugador: ${playerId ?? "espectador"}`);
 
-  const client = { socket, playerId };
+  const client: Client = { socket, playerId };
   clients.push(client);
 
-  socket.send(JSON.stringify({ type: "role", player: playerId }));
+  const roleMessage: WebSocketMessage = { 
+    type: "role", 
+    player: playerId !== null ? playerId : undefined 
+  };
+  socket.send(JSON.stringify(roleMessage));
 
-  socket.on("message", (msg) => {
+  socket.on("message", (msg: Buffer) => {
     try {
-      const parsed = JSON.parse(msg.toString());
-      if (parsed.type === "move" && client.playerId) {
-        const paddle = client.playerId === 1 ? 'left' : 'right';
+      const parsed: WebSocketMessage = JSON.parse(msg.toString());
+      if (parsed.type === "move" && client.playerId && parsed.dy !== undefined) {
+        const paddle: keyof Paddles = client.playerId === 1 ? 'left' : 'right';
         gameState.paddles[paddle].y = Math.max(0, Math.min(300, gameState.paddles[paddle].y + parsed.dy));
       }
     } catch (e) {
@@ -124,7 +169,8 @@ setInterval(() => {
     }
 
     // Broadcast
-    const state = JSON.stringify({ type: "state", data: gameState });
+    const stateMessage: WebSocketMessage = { type: "state", data: gameState };
+    const state = JSON.stringify(stateMessage);
     clients.forEach(client => {
       try {
         client.socket.send(state);
@@ -135,11 +181,11 @@ setInterval(() => {
   }
 }, 50);
 
-function resetBall() {
+function resetBall(): void {
   gameState.ball = { x: 300, y: 200, dx: 4, dy: 4, r: 10 };
 }
 
-const start = async () => {
+const start = async (): Promise<void> => {
   try {
     await fastify.listen({ port: 8080, host: "0.0.0.0" });
     console.log("🚀 Game Server en https://localhost:8080");

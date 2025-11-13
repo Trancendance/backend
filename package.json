@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "npm run clean && npx tsc -p tsconfig.json && npm run copy-assets",
-    "copy-assets": "cp -r src/microservices/gateway dist/microservices/ && cp -r src/microservices/websocket dist/microservices/ && cp -r src/microservices/game dist/microservices/ && cp -r src/public dist/ && cp -r certs dist/",
+        "build": "npm run clean && npx tsc -p tsconfig.json && npm run copy-assets",
+    "copy-assets": "cp -r src/public dist/ && cp -r certs dist/",
     "clean": "rm -rf dist && mkdir -p dist",
     "dev": "npx tsx watch src/microservices/api/server.ts",
     "fclean": "rm -rf dist node_modules package-lock.json",
-    "verify-build": "npm run build && echo '=== Estructura compilada ===' && find dist -type f -name '*.js' | sort && echo '=== Gateway existe? ===' && ls -la dist/microservices/gateway/ && echo '=== Websocket existe? ===' && ls -la dist/microservices/websocket/"
+    "verify-build": "npm run build && echo '=== Estructura compilada ===' && find dist -type f -name '*.js' | sort && echo '=== Websocket existe? ===' && ls -la dist/microservices/websocket/",
+    "websocket:dev": "npx tsx watch src/microservices/websocket/server.ts"
   },
   "dependencies": {
     "@fastify/jwt": "^10.0.0",

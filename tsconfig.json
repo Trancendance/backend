@@ -19,13 +19,13 @@
   },
   "include": [
     "src/microservices/api/**/*.ts",
-    "src/microservices/sequelize.ts"
+    "src/microservices/sequelize.ts",
+    "src/microservices/websocket/**/*.ts",
+    "src/microservices/gateway/**/*", 
+    "src/microservices/game/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "src/microservices/gateway/**/*",
-    "src/microservices/websocket/**/*", 
-    "src/microservices/game/**/*"
+    "dist"
   ]
 }

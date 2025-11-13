@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { sequelize } from '../sequelize.js';
-import db from '../database.js'
+import { initializeAllModels } from '../sequelize.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -112,11 +112,8 @@ fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
 
 const start = async () => {
   try {
-    await sequelize.authenticate();//Comprova que pot connectar a la BBDD
-    console.log('DB connexion done!');
-    // Inicializar modelos explícitamente
-    const { initializeModels } = await import('./models/index.js');
-    await initializeModels();
+    await sequelize.authenticate();
+    await initializeAllModels();
 
     // await sequelize.sync({ force: false });//Crea les taules automàticament segons els models // force: false para no borrar datos existentes
     await loadRouters();//carrega le srutes

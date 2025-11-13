@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../../sequelize';
+import { sequelize } from '../../sequelize.js';
 
 interface StreamChatAttributes {
   stream_id: number;
@@ -7,7 +7,7 @@ interface StreamChatAttributes {
   active: boolean;
 }
 
-interface StreamChatCreationAtributes extends Optional<StreamChatAttributes, 'stream_id'> {}
+interface StreamChatCreationAtributes extends Optional<StreamChatAttributes, 'stream_id' | 'created_at'> {}
 
 class StreamChat extends Model<StreamChatAttributes, StreamChatCreationAtributes> implements StreamChatAttributes {
   public stream_id!: number;
@@ -30,7 +30,7 @@ StreamChat.init(
         active: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: false
+            defaultValue: true
         }
     },
     {

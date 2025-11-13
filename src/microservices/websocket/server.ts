@@ -4,7 +4,9 @@ import websocketPlugin from "@fastify/websocket";
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { chatService } from './tmpChat.js';
+import { tempChatService } from "./services/TempChat.js";
+import { TempChatController } from './controllers/TempChat.js';
+import { initializeAllModels } from '../sequelize.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,9 +26,10 @@ const fastify = Fastify({
 });
 
 await fastify.register(websocketPlugin);
+await initializeAllModels();
 
 fastify.get("/", async (req, reply) => {
-  const stats = chatService.getStats();
+  const stats = tempChatService.getStats();
   
   reply.type('text/html').send(`
     <!DOCTYPE html>
@@ -34,7 +37,7 @@ fastify.get("/", async (req, reply) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>WebSocket Chat Server</title>
+        <title>Temp Chat WebSocket Server</title>
         <style>
             body { 
                 font-family: Arial, sans-serif; 
@@ -86,11 +89,12 @@ fastify.get("/", async (req, reply) => {
             .message { margin: 5px 0; }
             .user { font-weight: bold; color: #007cba; }
             .timestamp { font-size: 0.8em; color: #666; }
+            .system { color: #666; font-style: italic; }
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>WebSocket Chat Server</h1>
+            <h1>Temp Chat WebSocket Server</h1>
             
             <div class="stats">
                 <p><strong>Port:</strong> 8082</p>
@@ -99,12 +103,12 @@ fastify.get("/", async (req, reply) => {
             </div>
 
             <div class="chat-container">
-                <h3>Live Chat Test</h3>
+                <h3>Live Temp Chat - Stream 1</h3>
                 <div id="messages"></div>
                 <div>
                     <input type="text" id="messageInput" placeholder="Type your message...">
                     <button id="sendButton">Send</button>
-                    <button id="deleteButton">Delete</button>
+                    <button id="deleteButton">Delete Stream</button>
                 </div>
             </div>
         </div>
@@ -114,36 +118,30 @@ fastify.get("/", async (req, reply) => {
             let currentUser = 'User' + Math.floor(Math.random() * 1000);
             
             function connectWebSocket() {
-                ws = new WebSocket('wss://localhost:8082/chat');
+                // Conectar al stream temporal 1
+                ws = new WebSocket('wss://localhost:8082/temp-chat/stream/1');
                 
                 ws.onopen = function() {
-                    console.log('✅ Connected to chat server');
-                    addMessage('System', 'Connected to chat as ' + currentUser, 'system');
+                    console.log('✅ Connected to temp stream 1');
                 };
                 
                 ws.onmessage = function(event) {
                     const data = JSON.parse(event.data);
                     
                     if (data.type === 'history') {
-                        // Clear existing messages
-                        document.getElementById('messages').innerHTML = '';
-                        
-                        // Display message history
+                        // Limpiar y cargar historial
+                        document.getElementById('messages').innerHTML = '';//AQUI CAL COMENTAR
                         data.messages.forEach(msg => {
-                            addMessage(msg.user_alias, msg.message_text, 'message', msg.timestamp);
+                            addMessage(msg.alias, msg.text, msg.type, msg.timestamp);
                         });
-                    } else if (data.type === 'message') {
-                        addMessage(data.user, data.text, 'message', data.timestamp);
-                    } else if (data.type === 'user_joined') {
-                        addMessage('System', data.user + ' joined the chat', 'system');
-                    } else if (data.type === 'user_left') {
-                        addMessage('System', data.user + ' left the chat', 'system');
+                    } else {
+                        // Mensaje normal, unión o salida
+                        addMessage(data.alias, data.text, data.type, data.timestamp);
                     }
                 };
                 
                 ws.onclose = function() {
-                    addMessage('System', 'Disconnected from chat', 'system');
-                    // Try to reconnect after 3 seconds
+                    addMessage('System', 'Disconnected from temp chat', 'system');
                     setTimeout(connectWebSocket, 3000);
                 };
                 
@@ -167,54 +165,49 @@ fastify.get("/", async (req, reply) => {
             
             async function deleteTable() {
                 try {
-                    const response = await fetch('/chat/delete', {
+                    const response = await fetch('/temp-chat/stream/1', {
                         method: 'DELETE'
                     });
                     const res = await response.json();
 
                     if (res.success) {
-                        console.log('Table deleted: ' + res.message);
+                        console.log('Temp stream deleted: ' + res.message);
                         location.reload();
                     } else {
                         alert('Error: ' + res.message);
                     }
                 } catch (error) {
-                    console.error('Error deleting table', error);
+                    console.error('Error deleting temp stream', error);
                     alert('Error al conectar server');
                 }
             }
             
-            function addMessage(user, text, type, timestamp = new Date().toLocaleTimeString()) {
+            function addMessage(alias, text, type, timestamp = new Date().toLocaleTimeString()) {
                 const messagesDiv = document.getElementById('messages');
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message';
                 
                 if (type === 'message') {
                     messageDiv.innerHTML = '<span class="timestamp">[' + timestamp + ']</span> ' +
-                                          '<span class="user">' + user + ':</span> ' + text;
+                                          '<span class="user">' + alias + ':</span> ' + text;
                 } else {
+                    // user_joined, user_left, system
                     messageDiv.innerHTML = '<span class="timestamp">[' + timestamp + ']</span> ' +
-                                          '<em>' + text + '</em>';
-                    messageDiv.style.color = '#666';
+                                          '<span class="system">' + text + '</span>';
                 }
                 
                 messagesDiv.appendChild(messageDiv);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }
             
-            // Initialize when page loads
             document.addEventListener('DOMContentLoaded', function() {
-                // Set up event listeners
                 document.getElementById('sendButton').addEventListener('click', sendMessage);
                 document.getElementById('deleteButton').addEventListener('click', deleteTable);
                 
                 document.getElementById('messageInput').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        sendMessage();
-                    }
+                    if (e.key === 'Enter') sendMessage();
                 });
                 
-                // Initialize connection when page loads - CORREGIDO: añadido ()
                 connectWebSocket();
             });
         </script>
@@ -223,62 +216,44 @@ fastify.get("/", async (req, reply) => {
   `);
 });
 
-// Health check endpoint
-fastify.get('/ws-health', async (request, reply) => {
-  const stats = chatService.getStats();
-  reply.send({ 
-    service: 'WebSocket Chat', 
-    status: 'OK',
-    connectedClients: stats.clients
-  });
+fastify.get("/temp-chat/stream/:streamId", { websocket: true }, async (socket, req) => {
+  const streamId = (req.params as any).streamId; // CORREGIDO: acceso a params
+  
+  const alias = `User${Math.floor(Math.random() * 1000)}`;
+  const streamIdNum = parseInt(streamId);
+  
+  try {
+    await tempChatService.addClient(socket, alias, streamIdNum);
+    
+    socket.on("message", (message: Buffer) => { // CORREGIDO: tipo para message
+      tempChatService.handleMessage(socket, message.toString());
+    });
+    
+    socket.on("close", () => {
+      tempChatService.removeClient(socket);
+    });
+    
+    socket.on("error", (error: Error) => { // CORREGIDO: tipo para error
+      console.error("Temp Chat WebSocket error:", error);
+      tempChatService.removeClient(socket);
+    });
+    
+  } catch (error: any) {
+    console.error(`Error adding client to temp stream ${streamId}:`, error);
+    socket.close();
+  }
 });
 
-// WebSocket chat endpoint
-fastify.get("/chat", { websocket: true }, (socket, req) => {
-  const user = `User${Math.floor(Math.random() * 1000)}`;
-  //cal agafar alias i posar-lo com a usuari 
-  
-  // Add client to chat service
-  chatService.addClient(socket, user);
-  
-  // Handle incoming messages
-  socket.on("message", (message) => {
-    chatService.handleMessage(socket, message.toString());
-  });
-  
-  // Handle client disconnection
-  socket.on("close", () => {
-    chatService.removeClient(socket);
-  });
-  
-  // Handle errors
-  socket.on("error", (error) => {
-    console.error("WebSocket error:", error);
-    chatService.removeClient(socket);
-  });
-});
 
-fastify.delete("/chat/delete", async (request, reply) => {
-    try {
-        chatService.deleteTable();
-
-        reply.send({
-            success: true,
-            message: "table dropped",
-        });
-    } catch (err) {
-        console.error("ERROR: ", err, " in /chat/delete");
-        reply.status(500).send({
-            success: false,
-            message: "error al borrar table"
-        });
-    }
-});
+fastify.post('/temp-chat/stream', TempChatController.createStream);
+fastify.delete('/temp-chat/stream/:streamId', TempChatController.deleteStream);
+fastify.get('/temp-chat/health', TempChatController.getHealth);
 
 const start = async () => {
   try {
+    await initializeAllModels();
     await fastify.listen({ port: 8082, host: "0.0.0.0" });
-    console.log("🚀 WebSocket Chat Server en:");
+    console.log("🚀 Temp Chat WebSocket Server en:");
     console.log("   • HTTPS: https://localhost:8082");
   } catch (err) {
     console.error(err);

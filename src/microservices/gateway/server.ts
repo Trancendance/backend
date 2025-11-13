@@ -1,10 +1,26 @@
-import Fastify from 'fastify';
+// backend/src/microservices/gateway/gateway.ts
+import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import staticPlugin from '@fastify/static';
 
-const DB_URL = process.env.DB_URL || 'https://transcendence_db:3000';
+// Interfaces
+interface HealthResponse {
+  status: string;
+  service: string;
+  port: number;
+  database_service?: string;
+  db_health?: any;
+  error?: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  message?: string;
+}
+
+const DB_URL: string = process.env.DB_URL || 'https://transcendence_db:3000';
 
 // Permitir self-signed en dev (llamadas internas del gateway al microservicio DB)
 if (process.env.ALLOW_SELF_SIGNED === 'true') {
@@ -21,7 +37,7 @@ const certPath = path.join(__dirname, '../../../certs/fd_transcendence.crt');
 // Directorio público para servir pong.html
 const publicDir = path.join(__dirname, '../../../public');
 
-const fastify = Fastify({
+const fastify: FastifyInstance = Fastify({
   logger: true,
   https: {
     key: fs.readFileSync(keyPath),
@@ -30,7 +46,7 @@ const fastify = Fastify({
 });
 
 // CORS básico (ajusta origin más adelante)
-fastify.addHook('onRequest', (request, reply, done) => {
+fastify.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done: () => void) => {
   reply.header('Access-Control-Allow-Origin', '*');
   reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   reply.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -40,55 +56,58 @@ fastify.addHook('onRequest', (request, reply, done) => {
 
 // Servir estáticos y /pong
 await fastify.register(staticPlugin, { root: publicDir, prefix: '/static/' });
-fastify.get('/pong', async (req, reply) => reply.sendFile('pong.html'));
+fastify.get('/pong', async (req: FastifyRequest, reply: FastifyReply) => reply.sendFile('pong.html'));
 
 // Health del gateway + del microservicio DB
-fastify.get('/health', async (_req, reply) => {
+fastify.get('/health', async (_req: FastifyRequest, reply: FastifyReply) => {
   try {
     const res = await fetch(`${DB_URL}/health`);
     const dbStatus = await res.json().catch(() => ({}));
-    reply.send({
+    const response: HealthResponse = {
       status: 'OK',
       service: 'API Gateway',
       port: 8080,
       database_service: dbStatus?.status === 'OK' ? 'Connected' : 'Unknown',
       db_health: dbStatus,
-    });
-  } catch (error) {
-    reply.send({
+    };
+    reply.send(response);
+  } catch (error: any) {
+    const response: HealthResponse = {
       status: 'OK',
       service: 'API Gateway',
       port: 8080,
       database_service: 'Unreachable',
       error: error?.message,
-    });
+    };
+    reply.send(response);
   }
 });
 
 // Proxy /api hacia el microservicio DB
-fastify.all('/api', async (request, reply) => {
+fastify.all('/api', async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const route = request.query.route || 'players';
+    const route: string = (request.query as any).route || 'players';
     const url = `${DB_URL}/api?route=${encodeURIComponent(route)}`;
 
-    const headers = { 'content-type': 'application/json' };
-    const method = request.method.toUpperCase();
-    const needsBody = ['POST', 'PUT', 'DELETE'].includes(method);
-    const body = needsBody ? JSON.stringify(request.body || {}) : undefined;
+    const headers: HeadersInit = { 'content-type': 'application/json' };
+    const method: string = request.method.toUpperCase();
+    const needsBody: boolean = ['POST', 'PUT', 'DELETE'].includes(method);
+    const body: string | undefined = needsBody ? JSON.stringify(request.body || {}) : undefined;
 
     const res = await fetch(url, { method, headers, body });
-    const contentType = res.headers.get('content-type') || 'application/json';
-    const text = await res.text();
+    const contentType: string = res.headers.get('content-type') || 'application/json';
+    const text: string = await res.text();
 
     reply.status(res.status).type(contentType).send(text);
-  } catch (err) {
+  } catch (err: any) {
     request.log.error({ err }, 'Gateway proxy error');
-    reply.status(502).send({ success: false, message: 'Upstream DB service error' });
+    const errorResponse: ApiResponse = { success: false, message: 'Upstream DB service error' };
+    reply.status(502).send(errorResponse);
   }
 });
 
 // Página de estado
-fastify.get('/', async (_request, reply) => {
+fastify.get('/', async (_request: FastifyRequest, reply: FastifyReply) => {
   reply.type('text/html').send(`
     <html>
       <body>
@@ -103,7 +122,7 @@ fastify.get('/', async (_request, reply) => {
   `);
 });
 
-const start = async () => {
+const start = async (): Promise<void> => {
   try {
     await fastify.listen({ port: 8080, host: '0.0.0.0' });
     fastify.log.info('API Gateway en https://localhost:8080');
@@ -112,4 +131,5 @@ const start = async () => {
     process.exit(1);
   }
 };
+
 start();
