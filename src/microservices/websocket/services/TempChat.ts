@@ -59,16 +59,21 @@ class TempChatService {
     console.log(`🗑️ Stream temporal ${streamId} eliminado`);
   }
 
-  // Agregar cliente a stream temporal
   public async addClient(socket: WebSocket, alias: string, streamId: number): Promise<void> {
+  console.log(`🔌 [TempChatService] Nuevo cliente: ${alias} al stream ${streamId}`);
+  
+  try {
     const stream = await StreamChat.findOne({
       where: { stream_id: streamId, active: true }
     });
     
     if (!stream) {
+      console.log(`❌ [TempChatService] Stream ${streamId} no existe o está inactivo`);
       socket.close();
       throw new Error(`Stream ${streamId} no existe o está inactivo`);
     }
+
+    console.log(`✅ [TempChatService] Stream ${streamId} encontrado, agregando cliente...`);
 
     const client: TempChatClient = { socket, alias, stream_id: streamId };
     
@@ -78,19 +83,28 @@ class TempChatService {
     
     this.clients.get(streamId)!.push(client);
     
-    console.log(`✅ ${alias} se unió al stream temporal ${streamId}`);
+    console.log(`✅ [TempChatService] ${alias} agregado. Clientes en stream ${streamId}: ${this.clients.get(streamId)!.length}`);
     
     // Enviar historial
+    console.log(`📖 [TempChatService] Enviando historial a ${alias}...`);
     await this.sendHistory(client);
     
     // Notificar unión
+    console.log(`📢 [TempChatService] Notificando unión de ${alias}...`);
     await this.saveAndBroadcast(streamId, {
       type: 'user_joined',
       alias: 'System',
       text: `${alias} joined the chat`,
       timestamp: new Date().toLocaleTimeString()
     });
+    
+    console.log(`🎉 [TempChatService] Cliente ${alias} completamente inicializado`);
+    
+  } catch (error) {
+    console.error(`💥 [TempChatService] Error crítico en addClient:`, error);
+    throw error;
   }
+}
 
   // Remover cliente
   public removeClient(socket: WebSocket): void {
@@ -153,28 +167,43 @@ class TempChatService {
 
   // Enviar historial (todos los mensajes en mismo formato)
   private async sendHistory(client: TempChatClient): Promise<void> {
-    try {
-      const recentMessages = await TempChatMessage.findAll({
-        where: { stream_id: client.stream_id },
-        order: [['timestamp', 'ASC']],
-        limit: 50
-      });
-      
-      const historyData: HistoryData = {
-        type: 'history',
-        messages: recentMessages.map(msg => ({
-          type: msg.type,
-          alias: msg.alias,
-          text: msg.text,
-          timestamp: msg.timestamp.toLocaleTimeString()
-        }))
-      };
-      
+  try {
+    console.log(`📚 [sendHistory] Buscando mensajes para stream ${client.stream_id}`);
+    
+    const recentMessages = await TempChatMessage.findAll({
+      where: { stream_id: client.stream_id },
+      order: [['timestamp', 'ASC']],
+      limit: 50
+    });
+    
+    console.log(`📚 [sendHistory] Encontrados ${recentMessages.length} mensajes`);
+    
+    const historyData: HistoryData = {
+      type: 'history',
+      messages: recentMessages.map(msg => ({
+        type: msg.type,
+        alias: msg.alias,
+        text: msg.text,
+        timestamp: msg.timestamp.toLocaleTimeString()
+      }))
+    };
+    
+    console.log(`📤 [sendHistory] Enviando historial a ${client.alias}...`);
+    
+    // Verificar que el socket esté abierto
+    if (client.socket.readyState === 1) { // OPEN
       client.socket.send(JSON.stringify(historyData));
-    } catch (error: any) {
-      console.error('❌ Error sending history:', error);
+      console.log(`✅ [sendHistory] Historial enviado exitosamente a ${client.alias}`);
+    } else {
+      console.log(`❌ [sendHistory] Socket no está abierto para ${client.alias}. Estado: ${client.socket.readyState}`);
+      throw new Error(`Socket no está abierto. Estado: ${client.socket.readyState}`);
     }
+    
+  } catch (error: any) {
+    console.error('💥 [sendHistory] Error enviando historial:', error);
+    throw error; // Propaga el error para verlo en los logs del servidor
   }
+}
 
   // Broadcast a stream
   private broadcastToStream(streamId: number, message: ChatMessageData): void {

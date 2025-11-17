@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { tempChatService } from "./services/TempChat.js";
 import { TempChatController } from './controllers/TempChat.js';
 import { initializeAllModels } from '../sequelize.js';
+import StreamChat from "./models/streamChat.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -114,54 +115,79 @@ fastify.get("/", async (req, reply) => {
         </div>
 
         <script>
-            let ws;
-            let currentUser = 'User' + Math.floor(Math.random() * 1000);
+    let ws;
+    let currentUser = 'User' + Math.floor(Math.random() * 1000);
+    let isConnecting = false;
+    
+    function connectWebSocket() {
+        if (isConnecting) {
+            console.log('⚠️ Ya está intentando conectar...');
+            return;
+        }
+        
+        isConnecting = true;
+        console.log('🔄 Intentando conectar WebSocket...');
+        
+        // Conectar al stream temporal 1
+        ws = new WebSocket('wss://localhost:8082/temp-chat/stream/1');
+        
+        ws.onopen = function() {
+            isConnecting = false;
+            console.log('✅ Connected to temp stream 1');
+            addMessage('System', 'Connected to chat', 'system');
+        };
+        
+        ws.onmessage = function(event) {
+            console.log('📨 Mensaje recibido del servidor:', event.data);
+            const data = JSON.parse(event.data);
             
-            function connectWebSocket() {
-                // Conectar al stream temporal 1
-                ws = new WebSocket('wss://localhost:8082/temp-chat/stream/1');
-                
-                ws.onopen = function() {
-                    console.log('✅ Connected to temp stream 1');
-                };
-                
-                ws.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    
-                    if (data.type === 'history') {
-                        // Limpiar y cargar historial
-                        document.getElementById('messages').innerHTML = '';//AQUI CAL COMENTAR
-                        data.messages.forEach(msg => {
-                            addMessage(msg.alias, msg.text, msg.type, msg.timestamp);
-                        });
-                    } else {
-                        // Mensaje normal, unión o salida
-                        addMessage(data.alias, data.text, data.type, data.timestamp);
-                    }
-                };
-                
-                ws.onclose = function() {
-                    addMessage('System', 'Disconnected from temp chat', 'system');
-                    setTimeout(connectWebSocket, 3000);
-                };
-                
-                ws.onerror = function(error) {
-                    console.error('WebSocket error:', error);
-                };
+            if (data.type === 'history') {
+                console.log('📚 Recibiendo historial con', data.messages.length, 'mensajes');
+                // Limpiar y cargar historial
+                document.getElementById('messages').innerHTML = '';
+                data.messages.forEach(msg => {
+                    addMessage(msg.alias, msg.text, msg.type, msg.timestamp);
+                });
+            } else {
+                // Mensaje normal, unión o salida
+                console.log('💬 Mensaje normal:', data);
+                addMessage(data.alias, data.text, data.type, data.timestamp);
             }
+        };
+        
+        ws.onclose = function(event) {
+            isConnecting = false;
+            console.log('🔌 WebSocket cerrado:', event.code, event.reason);
+            addMessage('System', 'Disconnected from chat', 'system');
             
-            function sendMessage() {
-                const input = document.getElementById('messageInput');
-                const text = input.value.trim();
-                
-                if (text && ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        type: 'message',
-                        text: text
-                    }));
-                    input.value = '';
-                }
-            }
+            // Reconectar solo después de 5 segundos
+            setTimeout(() => {
+                console.log('🔄 Intentando reconectar...');
+                connectWebSocket();
+            }, 5000);
+        };
+        
+        ws.onerror = function(error) {
+            isConnecting = false;
+            console.error('❌ WebSocket error:', error);
+        };
+    }
+    
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+        
+        if (text && ws && ws.readyState === WebSocket.OPEN) {
+            console.log('📤 Enviando mensaje:', text);
+            ws.send(JSON.stringify({
+                type: 'message',
+                text: text
+            }));
+            input.value = '';
+        } else {
+            console.log('❌ No se puede enviar - WebSocket estado:', ws ? ws.readyState : 'no definido');
+        }
+    }
             
             async function deleteTable() {
                 try {
@@ -201,6 +227,8 @@ fastify.get("/", async (req, reply) => {
             }
             
             document.addEventListener('DOMContentLoaded', function() {
+
+            console.log('🚀 Página cargada, conectando WebSocket...');
                 document.getElementById('sendButton').addEventListener('click', sendMessage);
                 document.getElementById('deleteButton').addEventListener('click', deleteTable);
                 
@@ -217,37 +245,56 @@ fastify.get("/", async (req, reply) => {
 });
 
 fastify.get("/temp-chat/stream/:streamId", { websocket: true }, async (socket, req) => {
-  const streamId = (req.params as any).streamId; // CORREGIDO: acceso a params
-  
+  const streamId = (req.params as any).streamId;
   const alias = `User${Math.floor(Math.random() * 1000)}`;
   const streamIdNum = parseInt(streamId);
-  
+
+  console.log(`🔄 Nueva conexión WebSocket para stream ${streamId}, alias: ${alias}`);
+  console.log(`📊 Clientes antes de agregar:`, tempChatService.getStats(streamIdNum));
+ 
   try {
-    await tempChatService.addClient(socket, alias, streamIdNum);
+    // Verificar si el stream existe, si no crearlo
+    let stream = await StreamChat.findOne({
+      where: { stream_id: streamIdNum, active: true }
+    });
     
-    socket.on("message", (message: Buffer) => { // CORREGIDO: tipo para message
+    if (!stream) {
+      console.log(`📝 Stream ${streamIdNum} no existe, creándolo...`);
+      // Usa tempChatService.createStream() que ya maneja la creación correctamente
+      await tempChatService.createStream();
+      console.log(`✅ Stream ${streamIdNum} creado exitosamente`);
+    }
+
+    await tempChatService.addClient(socket, alias, streamIdNum);
+    console.log(`✅ Cliente ${alias} agregado exitosamente al stream ${streamId}`);
+    
+    socket.on("message", (message: Buffer) => {
+      console.log(`📨 Mensaje recibido de ${alias}:`, message.toString());
       tempChatService.handleMessage(socket, message.toString());
     });
     
     socket.on("close", () => {
+      console.log(`🔌 Conexión cerrada para ${alias}.`);
+      console.log(`📊 Clientes antes de remover:`, tempChatService.getStats(streamIdNum));
       tempChatService.removeClient(socket);
+      console.log(`📊 Clientes después de remover:`, tempChatService.getStats(streamIdNum));
     });
     
-    socket.on("error", (error: Error) => { // CORREGIDO: tipo para error
-      console.error("Temp Chat WebSocket error:", error);
+    socket.on("error", (error: Error) => {
+      console.error(`❌ Error WebSocket para ${alias}:`, error);
       tempChatService.removeClient(socket);
     });
     
   } catch (error: any) {
-    console.error(`Error adding client to temp stream ${streamId}:`, error);
-    socket.close();
+    console.error(`❌ Error crítico agregando cliente al stream ${streamId}:`, error);
+    console.error(error.stack); // Esto te dará más detalles del error
+    socket.close(1011, 'Server error: ' + error.message);
   }
 });
 
 
-fastify.post('/temp-chat/stream', TempChatController.createStream);
+fastify.post('/temp-chat/stream/', TempChatController.createStream);
 fastify.delete('/temp-chat/stream/:streamId', TempChatController.deleteStream);
-fastify.get('/temp-chat/health', TempChatController.getHealth);
 
 const start = async () => {
   try {

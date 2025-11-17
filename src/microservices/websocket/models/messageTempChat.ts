@@ -38,7 +38,7 @@ TempChatMessage.init(
         },
         alias: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: false
             // unique: true
         },
         text: {
