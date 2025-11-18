@@ -1,34 +1,34 @@
 // backend/src/microservices/websocket/server.js
 import Fastify from "fastify";
 import websocketPlugin from "@fastify/websocket";
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { chatService } from './tmpChat.js';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { chatService } from "./tmpChat.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Certificats HTTPS
-const keyPath = path.join(__dirname, '../../../certs/fd_transcendence.key');
-const certPath = path.join(__dirname, '../../../certs/fd_transcendence.crt');
+const keyPath = path.join(__dirname, "../../../certs/fd_transcendence.key");
+const certPath = path.join(__dirname, "../../../certs/fd_transcendence.crt");
 
 const httpsOptions = {
   key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath)
+  cert: fs.readFileSync(certPath),
 };
 
-const fastify = Fastify({ 
-  logger: true, 
-  https: httpsOptions
+const fastify = Fastify({
+  logger: true,
+  https: httpsOptions,
 });
 
 await fastify.register(websocketPlugin);
 
 fastify.get("/", async (req, reply) => {
   const stats = chatService.getStats();
-  
-  reply.type('text/html').send(`
+
+  reply.type("text/html").send(/*html*/ `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -224,33 +224,33 @@ fastify.get("/", async (req, reply) => {
 });
 
 // Health check endpoint
-fastify.get('/ws-health', async (request, reply) => {
+fastify.get("/ws-health", async (request, reply) => {
   const stats = chatService.getStats();
-  reply.send({ 
-    service: 'WebSocket Chat', 
-    status: 'OK',
-    connectedClients: stats.clients
+  reply.send({
+    service: "WebSocket Chat",
+    status: "OK",
+    connectedClients: stats.clients,
   });
 });
 
 // WebSocket chat endpoint
 fastify.get("/chat", { websocket: true }, (socket, req) => {
   const user = `User${Math.floor(Math.random() * 1000)}`;
-  //cal agafar alias i posar-lo com a usuari 
-  
+  //cal agafar alias i posar-lo com a usuari
+
   // Add client to chat service
   chatService.addClient(socket, user);
-  
+
   // Handle incoming messages
   socket.on("message", (message) => {
     chatService.handleMessage(socket, message.toString());
   });
-  
+
   // Handle client disconnection
   socket.on("close", () => {
     chatService.removeClient(socket);
   });
-  
+
   // Handle errors
   socket.on("error", (error) => {
     console.error("WebSocket error:", error);
@@ -259,20 +259,20 @@ fastify.get("/chat", { websocket: true }, (socket, req) => {
 });
 
 fastify.delete("/chat/delete", async (request, reply) => {
-    try {
-        chatService.deleteTable();
+  try {
+    chatService.deleteTable();
 
-        reply.send({
-            success: true,
-            message: "table dropped",
-        });
-    } catch (err) {
-        console.error("ERROR: ", err, " in /chat/delete");
-        reply.status(500).send({
-            success: false,
-            message: "error al borrar table"
-        });
-    }
+    reply.send({
+      success: true,
+      message: "table dropped",
+    });
+  } catch (err) {
+    console.error("ERROR: ", err, " in /chat/delete");
+    reply.status(500).send({
+      success: false,
+      message: "error al borrar table",
+    });
+  }
 });
 
 const start = async () => {
