@@ -1,6 +1,6 @@
-import User from "../models/user.js";
+import unverifiedPlayer from "../models/unverified_users.js"
 
-const userModel = new User(null);
+const unverifiedModel = new unverifiedPlayer(null);
 
 export interface UserExistence {
     aliasExists: boolean;
@@ -10,12 +10,12 @@ export interface UserExistence {
 //verify if alias or email exists in database
 export const checkUserExistence = async (alias: string, email: string): Promise<{ aliasExists: boolean; emailExists: boolean }> => {
     const [existingAlias, existingEmail] = await Promise.all([
-        userModel.getByAlias(alias),
-        userModel.getByEmail(email)
+        unverifiedModel.getByAlias(alias),
+        unverifiedModel.getByEmail(email)
     ]);
 
     return {
-        aliasExists: !!existingAlias,//
+        aliasExists: !!existingAlias,
         emailExists: !!existingEmail
     };
 };

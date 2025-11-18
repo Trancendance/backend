@@ -11,19 +11,14 @@ yup.addMethod(yup.string, 'email', function validateEmail(message) {
 });
 
 export const registerSchema = yup.object({
-    alias: yup.string()
+  alias: yup.string()
     .required('Alias is required')
     .min(3, 'Alias must be at least 3 characters')
     .max(20, 'Alias must not exceed 50 characters'),
   email: yup.string()
     .required('Email is required')
-    .email('Invalid email format'),
-  first_name: yup.string()
-    .optional()
-    .max(20, 'First name too long'),
-  last_name: yup.string()
-    .optional()
-    .max(20, 'Last name too long'),
+    .email('Invalid email format')
+    .transform((value: string) => value.toLowerCase()),
   image_path: yup.string()
     .optional()
     .matches(
@@ -36,6 +31,7 @@ export const loginSchema = yup.object({
     email: yup.string()
     .required('Email is required')
     .email('Invalid email format')
+    .transform((value: string) => value.toLowerCase()),
 });
 
 export type RegisterInput = yup.InferType<typeof registerSchema>;

@@ -274,7 +274,7 @@ fastify.get("/temp-chat/stream/:streamId", { websocket: true }, async (socket, r
     });
     
     socket.on("close", () => {
-      console.log(`🔌 Conexión cerrada para ${alias}.`);
+      console.log(`🔌 Conexión cerrada para ${alias}. `);
       console.log(`📊 Clientes antes de remover:`, tempChatService.getStats(streamIdNum));
       tempChatService.removeClient(socket);
       console.log(`📊 Clientes después de remover:`, tempChatService.getStats(streamIdNum));

@@ -1,6 +1,7 @@
 import { Sequelize } from 'sequelize';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Unverified } from './api/models/unverified_users.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +17,10 @@ const sequelize = new Sequelize({
 import('./api/models/user.js').then(({ Player }) => {
     // Player ya está definido en la importación
     console.log('Player model loaded');
+}).catch(console.error);
+
+import('./api/models/unverified_users.js').then(( { Unverified } ) => {
+  console.log("unnverified aaaaaaaaaaaaa");
 }).catch(console.error);
 
 import('./websocket/models/streamChat.js').then(({ default: StreamChat }) => {

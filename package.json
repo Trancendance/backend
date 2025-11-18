@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-        "build": "npm run clean && npx tsc -p tsconfig.json && npm run copy-assets",
+    "build": "npm run clean && npx tsc -p tsconfig.json && npm run copy-assets",
     "copy-assets": "cp -r src/public dist/ && cp -r certs dist/",
     "clean": "rm -rf dist && mkdir -p dist",
     "dev": "npx tsx watch src/microservices/api/server.ts",
