@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "./generate-certificate.sh && node dist/microservices/api/server.js",
-    "build": "npm run clean && tsc -p tsconfig.json",
-    "dev": "PORT=3000 tsx src/microservices/api/server.ts",
-    "dev:watch": "PORT=3000 nodemon --ext ts,js --exec \"tsx src/microservices/api/server.ts\"",
-    "clean": "rm -rf dist node_modules package-lock.json && npm install",
-    "fresh": "npm run clean && npm run build && npm run dev:watch",
-    "fclean": "rm -rf dist node_modules package-lock.json"
+    "build": "tsc",
+    "dev:build": "tsc --watch",
+  
+    "dev:gateway": "nodemon dist/microservices/gateway/server.js",
+    "dev:websocket": "nodemon dist/microservices/websocket/server.js",
+    "dev:fakegame": "nodemon dist/microservices/fakegame/server.js",
+    "dev": "npm-run-all --parallel dev:build dev:gateway dev:websocket dev:fakegame"
   },
   "dependencies": {
     "@fastify/static": "^8.0.1",
@@ -23,6 +23,7 @@
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "npm-run-all": "^4.1.5"
   }
 }
