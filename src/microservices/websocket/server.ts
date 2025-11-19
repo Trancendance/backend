@@ -19,7 +19,15 @@ const httpsOptions = {
 };
 
 const fastify = Fastify({
-  logger: true,
+  logger: {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        translateTime: false,
+        ignore: "time,hostname,pid",
+      },
+    },
+  },
   https: httpsOptions,
 });
 

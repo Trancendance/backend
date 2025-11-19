@@ -1,25 +1,33 @@
 // backend/src/microservices/game/server.js
 import Fastify from "fastify";
 import websocketPlugin from "@fastify/websocket";
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Certificats HTTPS
-const keyPath = path.join(__dirname, '../../../certs/fd_transcendence.key');
-const certPath = path.join(__dirname, '../../../certs/fd_transcendence.crt');
+const keyPath = path.join(__dirname, "../../../certs/fd_transcendence.key");
+const certPath = path.join(__dirname, "../../../certs/fd_transcendence.crt");
 
 const httpsOptions = {
   key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath)
+  cert: fs.readFileSync(certPath),
 };
 
-const fastify = Fastify({ 
-  logger: true, 
-  https: httpsOptions
+const fastify = Fastify({
+  logger: {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        translateTime: false,
+        ignore: "time,hostname,pid",
+      },
+    },
+  },
+  https: httpsOptions,
 });
 
 await fastify.register(websocketPlugin);
@@ -35,18 +43,18 @@ let gameState = {
 
 // Serve game client
 fastify.get("/", async (req, reply) => {
-  const htmlPath = path.join(__dirname, '../../public/game.html');
+  const htmlPath = path.join(__dirname, "../../public/game.html");
   const htmlContent = fs.readFileSync(htmlPath, "utf8");
   reply.type("text/html").send(htmlContent);
 });
 
-fastify.get('/game-health', async (request, reply) => {
-  reply.send({ service: 'Game', status: 'OK' });
+fastify.get("/game-health", async (request, reply) => {
+  reply.send({ service: "Game", status: "OK" });
 });
 
 // Status page
 fastify.get("/status", async (req, reply) => {
-  reply.type('text/html').send(`
+  reply.type("text/html").send(`
     <html>
       <body>
         <h1> Game Server</h1>
@@ -73,8 +81,11 @@ fastify.get("/wss", { websocket: true }, (socket, req) => {
     try {
       const parsed = JSON.parse(msg.toString());
       if (parsed.type === "move" && client.playerId) {
-        const paddle = client.playerId === 1 ? 'left' : 'right';
-        gameState.paddles[paddle].y = Math.max(0, Math.min(300, gameState.paddles[paddle].y + parsed.dy));
+        const paddle = client.playerId === 1 ? "left" : "right";
+        gameState.paddles[paddle].y = Math.max(
+          0,
+          Math.min(300, gameState.paddles[paddle].y + parsed.dy)
+        );
       }
     } catch (e) {
       console.error("Error parsing message", e);
@@ -96,20 +107,26 @@ setInterval(() => {
     gameState.ball.y += gameState.ball.dy;
 
     // Ball collision
-    if (gameState.ball.y - gameState.ball.r < 0 || 
-        gameState.ball.y + gameState.ball.r > 400) {
+    if (
+      gameState.ball.y - gameState.ball.r < 0 ||
+      gameState.ball.y + gameState.ball.r > 400
+    ) {
       gameState.ball.dy *= -1;
     }
 
     // Paddle collision
-    if (gameState.ball.x - gameState.ball.r < 20 && 
-        gameState.ball.y > gameState.paddles.left.y && 
-        gameState.ball.y < gameState.paddles.left.y + 100) {
+    if (
+      gameState.ball.x - gameState.ball.r < 20 &&
+      gameState.ball.y > gameState.paddles.left.y &&
+      gameState.ball.y < gameState.paddles.left.y + 100
+    ) {
       gameState.ball.dx *= -1.05;
     }
-    if (gameState.ball.x + gameState.ball.r > 580 && 
-        gameState.ball.y > gameState.paddles.right.y && 
-        gameState.ball.y < gameState.paddles.right.y + 100) {
+    if (
+      gameState.ball.x + gameState.ball.r > 580 &&
+      gameState.ball.y > gameState.paddles.right.y &&
+      gameState.ball.y < gameState.paddles.right.y + 100
+    ) {
       gameState.ball.dx *= -1.05;
     }
 
@@ -125,7 +142,7 @@ setInterval(() => {
 
     // Broadcast
     const state = JSON.stringify({ type: "state", data: gameState });
-    clients.forEach(client => {
+    clients.forEach((client) => {
       try {
         client.socket.send(state);
       } catch (e) {

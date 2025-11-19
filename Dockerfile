@@ -39,14 +39,15 @@
 # CMD ["sh", "-c", "node dist/microservices/gateway/server.js & node dist/microservices/websocket/server.js & node dist/microservices/fakeGame/server.js & wait"]
 
 
-FROM node:20-slim
+# FROM node:20-slim
+# RUN apt-get update && apt-get install -y sqlite3 python3 make g++ && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y \
-    sqlite3 python3 make g++ \
-    && rm -rf /var/lib/apt/lists/*
-
+# NODEMON BUILD
+FROM transcendence-base
 WORKDIR /usr/src/app
 COPY . .
 RUN npm install
 EXPOSE 8080 8082 8083
+ENV DB_URL=https://transcendence_db:3000
+ENV ALLOW_SELF_SIGNED=true
 CMD ["npm", "run", "dev"]
