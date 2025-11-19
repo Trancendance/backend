@@ -23,19 +23,19 @@ interface ApiResponse {
 const DB_URL: string = process.env.DB_URL || 'https://transcendence_db:3000';
 
 // Permitir self-signed en dev (llamadas internas del gateway al microservicio DB)
-if (process.env.ALLOW_SELF_SIGNED === 'true') {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+if (process.env.ALLOW_SELF_SIGNED === "true") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 }
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Certificados del contenedor backend
-const keyPath = path.join(__dirname, '../../../certs/fd_transcendence.key');
-const certPath = path.join(__dirname, '../../../certs/fd_transcendence.crt');
+const keyPath = path.join(__dirname, "../../../certs/fd_transcendence.key");
+const certPath = path.join(__dirname, "../../../certs/fd_transcendence.crt");
 
 // Directorio público para servir pong.html
-const publicDir = path.join(__dirname, '../../../public');
+const publicDir = path.join(__dirname, "../../../public");
 
 const fastify: FastifyInstance = Fastify({
   logger: true,
@@ -67,7 +67,7 @@ fastify.get('/health', async (_req: FastifyRequest, reply: FastifyReply) => {
       status: 'OK',
       service: 'API Gateway',
       port: 8080,
-      database_service: dbStatus?.status === 'OK' ? 'Connected' : 'Unknown',
+      database_service: dbStatus?.status === "OK" ? "Connected" : "Unknown",
       db_health: dbStatus,
     };
     reply.send(response);
@@ -76,7 +76,7 @@ fastify.get('/health', async (_req: FastifyRequest, reply: FastifyReply) => {
       status: 'OK',
       service: 'API Gateway',
       port: 8080,
-      database_service: 'Unreachable',
+      database_service: "Unreachable",
       error: error?.message,
     };
     reply.send(response);
@@ -124,8 +124,8 @@ fastify.get('/', async (_request: FastifyRequest, reply: FastifyReply) => {
 
 const start = async (): Promise<void> => {
   try {
-    await fastify.listen({ port: 8080, host: '0.0.0.0' });
-    fastify.log.info('API Gateway en https://localhost:8080');
+    await fastify.listen({ port: 8080, host: "0.0.0.0" });
+    fastify.log.info("API Gateway en https://localhost:8080");
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

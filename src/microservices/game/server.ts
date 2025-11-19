@@ -1,9 +1,9 @@
 // backend/src/microservices/game/server.ts
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import websocketPlugin from "@fastify/websocket";
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,17 +50,25 @@ interface WebSocketMessage {
 }
 
 // Certificats HTTPS
-const keyPath = path.join(__dirname, '../../../certs/fd_transcendence.key');
-const certPath = path.join(__dirname, '../../../certs/fd_transcendence.crt');
+const keyPath = path.join(__dirname, "../../../certs/fd_transcendence.key");
+const certPath = path.join(__dirname, "../../../certs/fd_transcendence.crt");
 
 const httpsOptions = {
   key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath)
+  cert: fs.readFileSync(certPath),
 };
 
-const fastify: FastifyInstance = Fastify({ 
-  logger: true, 
-  https: httpsOptions
+const fastify = Fastify({
+  logger: {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        translateTime: false,
+        ignore: "time,hostname,pid",
+      },
+    },
+  },
+  https: httpsOptions,
 });
 
 await fastify.register(websocketPlugin);
@@ -75,19 +83,19 @@ let gameState: GameState = {
 };
 
 // Serve game client
-fastify.get("/", async (req: FastifyRequest, reply: FastifyReply) => {
-  const htmlPath = path.join(__dirname, '../../public/game.html');
+fastify.get("/", async (req, reply) => {
+  const htmlPath = path.join(__dirname, "../../public/game.html");
   const htmlContent = fs.readFileSync(htmlPath, "utf8");
   reply.type("text/html").send(htmlContent);
 });
 
-fastify.get('/game-health', async (request: FastifyRequest, reply: FastifyReply) => {
-  reply.send({ service: 'Game', status: 'OK' });
+fastify.get("/game-health", async (request, reply) => {
+  reply.send({ service: "Game", status: "OK" });
 });
 
 // Status page
-fastify.get("/status", async (req: FastifyRequest, reply: FastifyReply) => {
-  reply.type('text/html').send(`
+fastify.get("/status", async (req, reply) => {
+  reply.type("text/html").send(`
     <html>
       <body>
         <h1> Game Server</h1>
@@ -141,20 +149,26 @@ setInterval(() => {
     gameState.ball.y += gameState.ball.dy;
 
     // Ball collision
-    if (gameState.ball.y - gameState.ball.r < 0 || 
-        gameState.ball.y + gameState.ball.r > 400) {
+    if (
+      gameState.ball.y - gameState.ball.r < 0 ||
+      gameState.ball.y + gameState.ball.r > 400
+    ) {
       gameState.ball.dy *= -1;
     }
 
     // Paddle collision
-    if (gameState.ball.x - gameState.ball.r < 20 && 
-        gameState.ball.y > gameState.paddles.left.y && 
-        gameState.ball.y < gameState.paddles.left.y + 100) {
+    if (
+      gameState.ball.x - gameState.ball.r < 20 &&
+      gameState.ball.y > gameState.paddles.left.y &&
+      gameState.ball.y < gameState.paddles.left.y + 100
+    ) {
       gameState.ball.dx *= -1.05;
     }
-    if (gameState.ball.x + gameState.ball.r > 580 && 
-        gameState.ball.y > gameState.paddles.right.y && 
-        gameState.ball.y < gameState.paddles.right.y + 100) {
+    if (
+      gameState.ball.x + gameState.ball.r > 580 &&
+      gameState.ball.y > gameState.paddles.right.y &&
+      gameState.ball.y < gameState.paddles.right.y + 100
+    ) {
       gameState.ball.dx *= -1.05;
     }
 

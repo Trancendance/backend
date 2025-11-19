@@ -3,13 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "npm run clean && npx tsc -p tsconfig.json && npm run copy-assets",
-    "copy-assets": "cp -r src/public dist/ && cp -r certs dist/",
-    "clean": "rm -rf dist && mkdir -p dist",
-    "dev": "npx tsx watch src/microservices/api/server.ts",
-    "fclean": "rm -rf dist node_modules package-lock.json",
-    "verify-build": "npm run build && echo '=== Estructura compilada ===' && find dist -type f -name '*.js' | sort && echo '=== Websocket existe? ===' && ls -la dist/microservices/websocket/",
-    "websocket:dev": "npx tsx watch src/microservices/websocket/server.ts"
+    "build": "tsc",
+    "dev:build": "tsc --watch",
+    "dev:gateway": "nodemon dist/microservices/gateway/server.js",
+    "dev:websocket": "nodemon dist/microservices/websocket/server.js",
+    "dev:fakegame": "nodemon dist/microservices/fakegame/server.js",
+    "dev": "npm-run-all --parallel dev:build dev:gateway dev:websocket dev:fakegame"
   },
   "dependencies": {
     "@fastify/jwt": "^10.0.0",
@@ -19,13 +18,15 @@
     "fastify": "^5.6.0",
     "sequelize": "^6.37.7",
     "sqlite3": "^5.1.7",
-    "yup": "^1.7.1"
+    "yup": "^1.7.1",
+	"pino-pretty": "^13.1.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.8.0",
     "@types/sequelize": "^4.28.20",
     "nodemon": "^3.1.10",
+    "npm-run-all": "^4.1.5",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"

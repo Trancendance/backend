@@ -13,30 +13,44 @@ const __dirname = path.dirname(__filename);
 const PORT = process.env.PORT || 3000;
 
 // Certificats HTTPS
-const keyPath = path.join(__dirname, '../../../certs/fd_transcendence.key');
-const certPath = path.join(__dirname, '../../../certs/fd_transcendence.crt');
+const keyPath = path.join(__dirname, "../../../certs/fd_transcendence.key");
+const certPath = path.join(__dirname, "../../../certs/fd_transcendence.crt");
 
 const httpsOptions = {
   key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath)
+  cert: fs.readFileSync(certPath),
 };
 
-const fastify = Fastify({ 
-  logger: true, 
-  https: httpsOptions
+const fastify = Fastify({
+  logger: {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        translateTime: false,
+        ignore: "time,hostname,pid",
+      },
+    },
+  },
+  https: httpsOptions,
 });
 
 // CORS millorar poc segur, deixa entrar a tothom
-fastify.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done) => {
-  reply.header('Access-Control-Allow-Origin', '*');
-  reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  reply.header('Access-Control-Allow-Headers', 'Content-Type');
-  if (request.method === 'OPTIONS') {
-    reply.status(200).send();
-    return;
+fastify.addHook(
+  "onRequest",
+  (request: FastifyRequest, reply: FastifyReply, done) => {
+    reply.header("Access-Control-Allow-Origin", "*");
+    reply.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    reply.header("Access-Control-Allow-Headers", "Content-Type");
+    if (request.method === "OPTIONS") {
+      reply.status(200).send();
+      return;
+    }
+    done();
   }
-  done();
-});
+);
 
 fastify.register(fjwt, {
   secret: 'MARIA',
@@ -46,7 +60,7 @@ fastify.register(fjwt, {
 });
 
 //https://3000/health
-fastify.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
+fastify.get("/health", async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     // Verificar que la BD responde
     await sequelize.authenticate();
@@ -68,26 +82,20 @@ fastify.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
 });
 
 const loadRouters = async () => {
-  const routerFiles = fs.readdirSync(path.resolve(__dirname, './routers'));
-  for (const file of routerFiles) 
-  {
-    // Solo cargar archivos .js, ignorar .d.ts, .ts y .map
-    if (!file.endsWith('.js') || file.endsWith('.d.ts') || file.endsWith('.ts') || file.endsWith('.map')) {
-      console.log(`Skipping non-JS file: ${file}`);
-      continue;
-    }
-    
-    console.log(file);
-    // const name = `/${file.replace(/\.(js|ts)$/, '').replace(/index/, '')}`;
-    
+  const routerFiles = fs.readdirSync(path.resolve(__dirname, "./routers"));
+  for (const file of routerFiles) {
+    if (!file.match(/\.(js|ts)$/)) continue;
+
+    const name = `/${file.replace(/\.(js|ts)$/, "").replace(/index/, "")}`;
+
     try {
       const name = `/${file.replace(/\.js$/, '').replace(/index/, '')}`;
       const modulePath = `./routers/${file}`;
       const routerModule = await import(modulePath);
-      
-      fastify.register(routerModule.default || routerModule, {prefix: name});
-      
-      console.log('Loaded router', name, 'from', file);
+
+      fastify.register(routerModule.default || routerModule, { prefix: name });
+
+      console.log("Loaded router", name, "from", file);
     } catch (error: any) {
       console.error(`ERROR loading route of file ${file} error:`, error);
     }
@@ -95,14 +103,14 @@ const loadRouters = async () => {
 };
 
 // Status page
-fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
-  reply.type('text/html').send(`
+fastify.get("/", async (request: FastifyRequest, reply: FastifyReply) => {
+  reply.type("text/html").send(`
     <html>
       <body>
         <h1> API Server</h1>
         <p>Puerto: ${PORT}</p>
         <p>Servicio funcionando correctamente</p>
-        <p>Environment: ${process.env.NODE_ENV || 'development'}</p>
+        <p>Environment: ${process.env.NODE_ENV || "development"}</p>
         <a href="/health">Health Check</a> | 
         <a href="/api">API Players</a>
       </body>
