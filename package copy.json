@@ -3,6 +3,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    // "build": "npm run clean && npx tsc -p tsconfig.json && npm run copy-assets",
+    // "copy-assets": "cp -r src/public dist/ && cp -r certs dist/",
+    // "clean": "rm -rf dist && mkdir -p dist",
+    // "dev": "npx tsx watch src/microservices/api/server.ts",
+    // "fclean": "rm -rf dist node_modules package-lock.json",
+    // "verify-build": "npm run build && echo '=== Estructura compilada ===' && find dist -type f -name '*.js' | sort && echo '=== Websocket existe? ===' && ls -la dist/microservices/websocket/",
+    // "websocket:dev": "npx tsx watch src/microservices/websocket/server.ts"
     "build": "tsc",
     "dev:build": "tsc --watch",
     "dev:gateway": "nodemon dist/microservices/gateway/server.js",

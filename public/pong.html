@@ -1,116 +1,148 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Pong – Conectividad</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 24px; }
-    .ok { color: #0a7d17; }
-    .fail { color: #b00020; }
-    .box { border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
-    .grid { display: grid; grid-template-columns: 220px 1fr; gap: 8px 16px; align-items: center; }
-    code { background: #f6f8fa; padding: 2px 4px; border-radius: 4px; }
-  </style>
-</head>
-<body>
-  <h1>Pong – Verificación de Conexiones</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pong – Conectividad</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 24px;
+      }
+      .ok {
+        color: #0a7d17;
+      }
+      .fail {
+        color: #b00020;
+      }
+      .box {
+        border: 1px solid #ddd;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 8px 16px;
+        align-items: center;
+      }
+      code {
+        background: #f6f8fa;
+        padding: 2px 4px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Pong – Verificación de Conexiones</h1>
 
-  <div class="box">
-    <div class="grid">
-      <div>Gateway (HTTPS 8080):</div>
-      <div id="gw">Comprobando...</div>
+    <div class="box">
+      <div class="grid">
+        <div>Gateway (HTTPS 8080):</div>
+        <div id="gw">Comprobando...</div>
 
-      <div>API DB (HTTPS 3000):</div>
-      <div id="db">Comprobando...</div>
+        <div>API DB (HTTPS 3000):</div>
+        <div id="db">Comprobando...</div>
 
-      <div>WebSocket (WSS 8082):</div>
-      <div id="ws">Comprobando...</div>
+        <div>WebSocket (WSS 8082):</div>
+        <div id="ws">Comprobando...</div>
+      </div>
     </div>
-  </div>
 
-  <div class="box">
-    <h3>Jugadores (API vía gateway)</h3>
-    <div id="players">Cargando...</div>
-  </div>
+    <div class="box">
+      <h3>Jugadores (API vía gateway)</h3>
+      <div id="players">Cargando...</div>
+    </div>
 
-  <script>
-    const gwEl = document.getElementById('gw');
-    const dbEl = document.getElementById('db');
-    const wsEl = document.getElementById('ws');
-    const playersEl = document.getElementById('players');
+    <script>
+      const gwEl = document.getElementById("gw");
+      const dbEl = document.getElementById("db");
+      const wsEl = document.getElementById("ws");
+      const playersEl = document.getElementById("players");
 
-    async function checkGateway() {
-      try {
-        const r = await fetch('https://localhost:8080/health', { method: 'GET' });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const j = await r.json();
-        gwEl.textContent = 'OK (' + (j.service || 'Gateway') + ')';
-        gwEl.className = 'ok';
-      } catch (e) {
-        gwEl.textContent = 'ERROR: ' + e.message;
-        gwEl.className = 'fail';
-      }
-    }
-
-    async function checkDB() {
-      try {
-        const r = await fetch('https://localhost:3000/health', { method: 'GET' });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const j = await r.json();
-        dbEl.textContent = 'OK (' + (j.service || 'API') + ')';
-        dbEl.className = 'ok';
-      } catch (e) {
-        dbEl.textContent = 'ERROR: ' + e.message;
-        dbEl.className = 'fail';
-      }
-    }
-
-    function checkWS() {
-      return new Promise((resolve) => {
+      async function checkGateway() {
         try {
-          const ws = new WebSocket('wss://localhost:8082/chat');
-          const done = (ok, msg) => {
-            try { ws.close(); } catch (_) {}
-            wsEl.textContent = ok ? 'OK (conectado)' : 'ERROR: ' + msg;
-            wsEl.className = ok ? 'ok' : 'fail';
-            resolve();
-          };
-          ws.onopen = () => done(true);
-          ws.onerror = (e) => done(false, 'fallo de conexión');
+          const r = await fetch("https://localhost:8080/health", {
+            method: "GET",
+          });
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          const j = await r.json();
+          gwEl.textContent = "OK (" + (j.service || "Gateway") + ")";
+          gwEl.className = "ok";
         } catch (e) {
-          wsEl.textContent = 'ERROR: ' + e.message;
-          wsEl.className = 'fail';
-          resolve();
+          gwEl.textContent = "ERROR: " + e.message;
+          gwEl.className = "fail";
         }
-      });
-    }
-
-    async function loadPlayersViaGateway() {
-      try {
-        const r = await fetch('https://localhost:8080/api?route=players', { method: 'GET' });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const arr = await r.json();
-        if (!Array.isArray(arr) || arr.length === 0) {
-          playersEl.textContent = 'No hay jugadores registrados';
-          return;
-        }
-        playersEl.innerHTML = arr.map((p) =>
-          `<div><strong>${p.alias}</strong> – ${p.first_name} ${p.last_name} (${p.email})</div>`
-        ).join('');
-      } catch (e) {
-        playersEl.textContent = 'ERROR: ' + e.message;
-        playersEl.className = 'fail';
       }
-    }
 
-    async function run() {
-      await checkGateway();
-      await checkDB();
-      await checkWS();
-      await loadPlayersViaGateway();
-    }
+      async function checkDB() {
+        try {
+          const r = await fetch("https://localhost:3000/health", {
+            method: "GET",
+          });
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          const j = await r.json();
+          dbEl.textContent = "OK (" + (j.service || "API") + ")";
+          dbEl.className = "ok";
+        } catch (e) {
+          dbEl.textContent = "ERROR: " + e.message;
+          dbEl.className = "fail";
+        }
+      }
 
-    run();
-  </script>
-</body>
+      function checkWS() {
+        return new Promise((resolve) => {
+          try {
+            const ws = new WebSocket("wss://localhost:8082/chat");
+            const done = (ok, msg) => {
+              try {
+                ws.close();
+              } catch (_) {}
+              wsEl.textContent = ok ? "OK (conectado)" : "ERROR: " + msg;
+              wsEl.className = ok ? "ok" : "fail";
+              resolve();
+            };
+            ws.onopen = () => done(true);
+            ws.onerror = (e) => done(false, "fallo de conexión");
+          } catch (e) {
+            wsEl.textContent = "ERROR: " + e.message;
+            wsEl.className = "fail";
+            resolve();
+          }
+        });
+      }
+
+      async function loadPlayersViaGateway() {
+        try {
+          const r = await fetch("https://localhost:8080/api?route=players", {
+            method: "GET",
+          });
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          const arr = await r.json();
+          if (!Array.isArray(arr) || arr.length === 0) {
+            playersEl.textContent = "No hay jugadores registrados";
+            return;
+          }
+          playersEl.innerHTML = arr
+            .map(
+              (p) =>
+                `<div><strong>${p.alias}</strong> – ${p.first_name} ${p.last_name} (${p.email})</div>`
+            )
+            .join("");
+        } catch (e) {
+          playersEl.textContent = "ERROR: " + e.message;
+          playersEl.className = "fail";
+        }
+      }
+
+      async function run() {
+        await checkGateway();
+        await checkDB();
+        await checkWS();
+        await loadPlayersViaGateway();
+      }
+
+      run();
+    </script>
+  </body>
 </html>

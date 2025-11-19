@@ -1,9 +1,9 @@
 // backend/src/microservices/game/server.ts
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import websocketPlugin from "@fastify/websocket";
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,17 +50,25 @@ interface WebSocketMessage {
 }
 
 // Certificats HTTPS
-const keyPath = path.join(__dirname, '../../../certs/fd_transcendence.key');
-const certPath = path.join(__dirname, '../../../certs/fd_transcendence.crt');
+const keyPath = path.join(__dirname, "../../../certs/fd_transcendence.key");
+const certPath = path.join(__dirname, "../../../certs/fd_transcendence.crt");
 
 const httpsOptions = {
   key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath)
+  cert: fs.readFileSync(certPath),
 };
 
-const fastify: FastifyInstance = Fastify({ 
-  logger: true, 
-  https: httpsOptions
+const fastify = Fastify({
+  logger: {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        translateTime: false,
+        ignore: "time,hostname,pid",
+      },
+    },
+  },
+  https: httpsOptions,
 });
 
 await fastify.register(websocketPlugin);
@@ -141,20 +149,26 @@ setInterval(() => {
     gameState.ball.y += gameState.ball.dy;
 
     // Ball collision
-    if (gameState.ball.y - gameState.ball.r < 0 || 
-        gameState.ball.y + gameState.ball.r > 400) {
+    if (
+      gameState.ball.y - gameState.ball.r < 0 ||
+      gameState.ball.y + gameState.ball.r > 400
+    ) {
       gameState.ball.dy *= -1;
     }
 
     // Paddle collision
-    if (gameState.ball.x - gameState.ball.r < 20 && 
-        gameState.ball.y > gameState.paddles.left.y && 
-        gameState.ball.y < gameState.paddles.left.y + 100) {
+    if (
+      gameState.ball.x - gameState.ball.r < 20 &&
+      gameState.ball.y > gameState.paddles.left.y &&
+      gameState.ball.y < gameState.paddles.left.y + 100
+    ) {
       gameState.ball.dx *= -1.05;
     }
-    if (gameState.ball.x + gameState.ball.r > 580 && 
-        gameState.ball.y > gameState.paddles.right.y && 
-        gameState.ball.y < gameState.paddles.right.y + 100) {
+    if (
+      gameState.ball.x + gameState.ball.r > 580 &&
+      gameState.ball.y > gameState.paddles.right.y &&
+      gameState.ball.y < gameState.paddles.right.y + 100
+    ) {
       gameState.ball.dx *= -1.05;
     }
 
