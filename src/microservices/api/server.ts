@@ -1,11 +1,11 @@
 // backend/src/microservices/api/server.ts
-import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
+import Fastify, { FastifyRequest, FastifyReply } from "fastify";
 import fjwt from "@fastify/jwt";
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import { sequelize } from '../sequelize.js';
-import { initializeAllModels } from '../sequelize.js';
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+import { sequelize } from "../sequelize.js";
+import { initializeAllModels } from "../sequelize.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,10 +53,10 @@ fastify.addHook(
 );
 
 fastify.register(fjwt, {
-  secret: 'MARIA',
+  secret: "MARIA",
   sign: {
-    expiresIn: '1h'
-  }
+    expiresIn: "1h",
+  },
 });
 
 //https://3000/health
@@ -64,38 +64,42 @@ fastify.get("/health", async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     // Verificar que la BD responde
     await sequelize.authenticate();
-    reply.send({ 
-      status: 'OK', 
-      service: 'API Server', 
+    reply.send({
+      status: "OK",
+      service: "API Server",
       port: `${PORT}`,
-      database: 'sequelize Connected'
+      database: "sequelize Connected",
     });
   } catch (error: any) {
-    console.error('Database health check failed:', error);
-    reply.status(500).send({ 
-      status: 'ERROR', 
-      service: 'API Server',
-      database: 'sequelize Disconnected',
-      error: error.message 
+    console.error("Database health check failed:", error);
+    reply.status(500).send({
+      status: "ERROR",
+      service: "API Server",
+      database: "sequelize Disconnected",
+      error: error.message,
     });
   }
 });
 
 const loadRouters = async () => {
-  const routerFiles = fs.readdirSync(path.resolve(__dirname, './routers'));
-  for (const file of routerFiles) 
-  {
+  const routerFiles = fs.readdirSync(path.resolve(__dirname, "./routers"));
+  for (const file of routerFiles) {
     // Solo cargar archivos .js, ignorar .d.ts, .ts y .map
-    if (!file.endsWith('.js') || file.endsWith('.d.ts') || file.endsWith('.ts') || file.endsWith('.map')) {
+    if (
+      !file.endsWith(".js") ||
+      file.endsWith(".d.ts") ||
+      file.endsWith(".ts") ||
+      file.endsWith(".map")
+    ) {
       console.log(`Skipping non-JS file: ${file}`);
       continue;
     }
-    
+
     console.log(file);
     // const name = `/${file.replace(/\.(js|ts)$/, '').replace(/index/, '')}`;
-    
+
     try {
-      const name = `/${file.replace(/\.js$/, '').replace(/index/, '')}`;
+      const name = `/${file.replace(/\.js$/, "").replace(/index/, "")}`;
       const modulePath = `./routers/${file}`;
       const routerModule = await import(modulePath);
 
@@ -130,8 +134,8 @@ const start = async () => {
     await initializeAllModels();
 
     // await sequelize.sync({ force: false });//Crea les taules automàticament segons els models // force: false para no borrar datos existentes
-    await loadRouters();//carrega le srutes
-    await fastify.listen({ port: Number(PORT), host: '0.0.0.0' });//inicia servidor
+    await loadRouters(); //carrega le srutes
+    await fastify.listen({ port: Number(PORT), host: "0.0.0.0" }); //inicia servidor
     console.log(`🚀 API Server en https://localhost:${PORT}`);
   } catch (err) {
     console.error(err);

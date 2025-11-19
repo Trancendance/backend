@@ -1,8 +1,7 @@
 # # # Imagen base oficial de Node.js
 # FROM node:20-slim
 
-# Instalar dependencias necesarias para better-sqlite3
-# possar --no-install-recommends per que vagi mes rapid
+# # Instalar dependencias necesarias para better-sqlite3
 # RUN apt-get update && apt-get install -y \
 #     sqlite3 \
 #     python3 \

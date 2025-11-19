@@ -1,12 +1,12 @@
 // backend/src/microservices/websocket/server.js
 import Fastify from "fastify";
 import websocketPlugin from "@fastify/websocket";
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { tempChatService } from "./services/TempChat.js";
-import { TempChatController } from './controllers/TempChat.js';
-import { initializeAllModels } from '../sequelize.js';
+import { TempChatController } from "./controllers/TempChat.js";
+import { initializeAllModels } from "../sequelize.js";
 import StreamChat from "./models/streamChat.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -39,8 +39,8 @@ await initializeAllModels();
 
 fastify.get("/", async (req, reply) => {
   const stats = tempChatService.getStats();
-  
-  reply.type('text/html').send(`
+
+  reply.type("text/html").send(`
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -252,57 +252,75 @@ fastify.get("/", async (req, reply) => {
   `);
 });
 
-fastify.get("/temp-chat/stream/:streamId", { websocket: true }, async (socket, req) => {
-  const streamId = (req.params as any).streamId;
-  const alias = `User${Math.floor(Math.random() * 1000)}`;
-  const streamIdNum = parseInt(streamId);
+fastify.get(
+  "/temp-chat/stream/:streamId",
+  { websocket: true },
+  async (socket, req) => {
+    const streamId = (req.params as any).streamId;
+    const alias = `User${Math.floor(Math.random() * 1000)}`;
+    const streamIdNum = parseInt(streamId);
 
-  console.log(`🔄 Nueva conexión WebSocket para stream ${streamId}, alias: ${alias}`);
-  console.log(`📊 Clientes antes de agregar:`, tempChatService.getStats(streamIdNum));
- 
-  try {
-    // Verificar si el stream existe, si no crearlo
-    let stream = await StreamChat.findOne({
-      where: { stream_id: streamIdNum, active: true }
-    });
-    
-    if (!stream) {
-      console.log(`📝 Stream ${streamIdNum} no existe, creándolo...`);
-      // Usa tempChatService.createStream() que ya maneja la creación correctamente
-      await tempChatService.createStream();
-      console.log(`✅ Stream ${streamIdNum} creado exitosamente`);
+    console.log(
+      `🔄 Nueva conexión WebSocket para stream ${streamId}, alias: ${alias}`
+    );
+    console.log(
+      `📊 Clientes antes de agregar:`,
+      tempChatService.getStats(streamIdNum)
+    );
+
+    try {
+      // Verificar si el stream existe, si no crearlo
+      let stream = await StreamChat.findOne({
+        where: { stream_id: streamIdNum, active: true },
+      });
+
+      if (!stream) {
+        console.log(`📝 Stream ${streamIdNum} no existe, creándolo...`);
+        // Usa tempChatService.createStream() que ya maneja la creación correctamente
+        await tempChatService.createStream();
+        console.log(`✅ Stream ${streamIdNum} creado exitosamente`);
+      }
+
+      await tempChatService.addClient(socket, alias, streamIdNum);
+      console.log(
+        `✅ Cliente ${alias} agregado exitosamente al stream ${streamId}`
+      );
+
+      socket.on("message", (message: Buffer) => {
+        console.log(`📨 Mensaje recibido de ${alias}:`, message.toString());
+        tempChatService.handleMessage(socket, message.toString());
+      });
+
+      socket.on("close", () => {
+        console.log(`🔌 Conexión cerrada para ${alias}. `);
+        console.log(
+          `📊 Clientes antes de remover:`,
+          tempChatService.getStats(streamIdNum)
+        );
+        tempChatService.removeClient(socket);
+        console.log(
+          `📊 Clientes después de remover:`,
+          tempChatService.getStats(streamIdNum)
+        );
+      });
+
+      socket.on("error", (error: Error) => {
+        console.error(`❌ Error WebSocket para ${alias}:`, error);
+        tempChatService.removeClient(socket);
+      });
+    } catch (error: any) {
+      console.error(
+        `❌ Error crítico agregando cliente al stream ${streamId}:`,
+        error
+      );
+      console.error(error.stack); // Esto te dará más detalles del error
+      socket.close(1011, "Server error: " + error.message);
     }
-
-    await tempChatService.addClient(socket, alias, streamIdNum);
-    console.log(`✅ Cliente ${alias} agregado exitosamente al stream ${streamId}`);
-    
-    socket.on("message", (message: Buffer) => {
-      console.log(`📨 Mensaje recibido de ${alias}:`, message.toString());
-      tempChatService.handleMessage(socket, message.toString());
-    });
-    
-    socket.on("close", () => {
-      console.log(`🔌 Conexión cerrada para ${alias}. `);
-      console.log(`📊 Clientes antes de remover:`, tempChatService.getStats(streamIdNum));
-      tempChatService.removeClient(socket);
-      console.log(`📊 Clientes después de remover:`, tempChatService.getStats(streamIdNum));
-    });
-    
-    socket.on("error", (error: Error) => {
-      console.error(`❌ Error WebSocket para ${alias}:`, error);
-      tempChatService.removeClient(socket);
-    });
-    
-  } catch (error: any) {
-    console.error(`❌ Error crítico agregando cliente al stream ${streamId}:`, error);
-    console.error(error.stack); // Esto te dará más detalles del error
-    socket.close(1011, 'Server error: ' + error.message);
   }
-});
+);
 
-
-fastify.post('/temp-chat/stream/', TempChatController.createStream);
-fastify.delete('/temp-chat/stream/:streamId', TempChatController.deleteStream);
+fastify.post("/temp-chat/stream/", TempChatController.createStream);
+fastify.delete("/temp-chat/stream/:streamId", TempChatController.deleteStream);
 
 const start = async () => {
   try {
