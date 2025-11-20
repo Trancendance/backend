@@ -1,4 +1,4 @@
-import { FastifyPluginAsync } from "fastify";
+import fastify, { FastifyPluginAsync } from 'fastify';
 import userController from '../controllers/user.js';
 
 const userRouter: FastifyPluginAsync = async(fastify, options) => {
