@@ -88,7 +88,8 @@ class UnverifiedPlayerClass {
     //     });
     // }
 
-    async getByAlias(alias: string): Promise<Unverified | null> {
+    async getByAlias(alias: string): Promise<Unverified | null> {//crec que caldria treure or null 
+    //pero dona error revisar 
        return Unverified.findOne({ where: { alias } });
     }
     
@@ -109,6 +110,10 @@ class UnverifiedPlayerClass {
             email: data.email,
             image_path: data.image_path || '../../public/assets/img/default.png'
         });
+    }
+    async deleteUnverifiedPlayer(email: string): Promise<null> {
+        Unverified.destroy({ where: { email }});
+        return null;
     }
 };
 

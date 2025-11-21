@@ -68,6 +68,8 @@ Player.init(
         timestamps: false
     }
 );
+//status 0 logout
+//status 1 login
 
 class User {
     private db: any;
@@ -75,14 +77,6 @@ class User {
     constructor(database: any) {
         this.db = database;
     };
-
-    // async getAllAliasStatusActive(): Promise<Player | null> {
-    //     return Player.findAll({
-    //         where: {
-    //             status: 'active'
-    //         }
-    //     });
-    // }
 
     async getByAlias(alias: string): Promise<Player | null> {
        return Player.findOne({ where: { alias } });
@@ -99,6 +93,11 @@ class User {
 
             });
         }
+    async changeStatus(email: string, newStatus: number): Promise<null> {
+        Player.update({ status: newStatus },
+            { where: { email }});
+            return null;
+    }
 };
 
 export { Player };
