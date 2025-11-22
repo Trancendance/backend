@@ -75,8 +75,7 @@ const userController = {
         
         const email = result.email!;
         const playerUnverData = await unverifiedModel.getByEmail(email);
-        
-        console.log("dades dins de unverified:", playerUnverData?.dataValues);
+
         //afegir a la nova bbdd
         if (!playerUnverData) {
             return reply.status(404).send({
@@ -94,6 +93,7 @@ const userController = {
         await unverifiedModel.deleteUnverifiedPlayer(email);
         //fer login 
         await playerModel.changeStatus(email, 1);
+
         reply.send({
             success: true,
             data: playerUnverData?.dataValues
@@ -128,10 +128,27 @@ const userController = {
         const { token } = request.body as { token: string };
         console.log("ENTRA A chekTokenLogin TOKEN:", token);
         //DESMONTAR MGICK LINK, cojer tocken despues = 
-        //desmontar token i agafar email
-        //getemail amb totes les dades
-        //afegir les dades a la taula player si el token segueix sent valid si no mostra error 
+        //si el token segueix sent valid si no mostra error 
+        const result = await getEmailFromToken(token, request);
+    
+        if (!result.success) {
+            return reply.status(401).send({
+                success: false,
+                error: result.error
+            });
+        }
+        
+        const email = result.email!;
+        // const playerUnverData = await unverifiedModel.getByEmail(email);
+        const playerData = await playerModel.getByEmail(email);
+        
+        //fer login 
+        await playerModel.changeStatus(email, 1);
         //retornar all data de player
+        reply.send({
+            success: true,
+            data: playerData?.dataValues
+        });
     }
 };
 

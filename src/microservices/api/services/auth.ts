@@ -35,7 +35,7 @@ export const generateVerifiedToken = (email: string, reply: FastifyReply): Promi
       type: 'token_verified'
     },
     {
-      expiresIn: '72h'
+      expiresIn: '5m'
     }
   );
 };

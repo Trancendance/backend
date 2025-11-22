@@ -105,6 +105,7 @@ class UnverifiedPlayerClass {
         const now = new Date();
         const expiration = new Date(now.getTime() + 3 * 60 * 60 * 1000);
         
+        console.log("addUnverifiedPlayer expitation date:", expiration);
         return Unverified.create({ 
             alias: data.alias, 
             email: data.email,
