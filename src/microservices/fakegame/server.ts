@@ -164,9 +164,9 @@ fastify.get("/fgame", { websocket: true }, (socket, req) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: 8083, host: "0.0.0.0" });
+    await fastify.listen({ port: 8080, host: "0.0.0.0" });
     console.log("🚀 WebSocket fake game server:");
-    console.log("HTTPS: https://localhost:8083");
+    console.log("HTTPS: https://localhost:8080");
   } catch (err) {
     console.error(err);
     process.exit(1);

@@ -1,3 +1,19 @@
+TO DO LIST
+[X] borrar dades del usuari verified de la taula unverified
+[x] al acabar chekTokenRegister ha déstar logejat canviar status a 1, funcio canvia a qualsevol status
+[] check exo que el link no hagi expirat fer prova canviar temps a min(els temps de expiracio es fa
+en 10 min pero en la bd se guarda mal arxiu unverified_user.)
+[] els comentaris que surten de INFO ? clen? saber que es logger transport pino-pretty
+[] login 
+[] enviar token del login
+[] borrar el data que es crea en backend
+[] revisar no fer nou arxius de rutes ja que register i login poden anar a part com class connect
+[] natejar arxiu user controllers hi ha moltes lineas 
+[] register amb email, buscar com poder enviar correus reals link: https://stackoverflow.com/questions/59829459/how-to-send-email-without-providing-my-emailid-and-password-in-node-jsnodemaile
+( crear emails fake: https://temp-mail.org/en/)
+[] borrar taules del temp chat 
+[] borrar el chat montat i comencar de nou 
+
 NO PREGUNTI ACCEPT RISK CERTIFICAT ROOTCA
 make generate-ca
 
