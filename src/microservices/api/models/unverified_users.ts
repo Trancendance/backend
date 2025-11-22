@@ -80,14 +80,6 @@ class UnverifiedPlayerClass {
         this.db = database;
     };
 
-    // async getAllAliasStatusActive(): Promise<Unverified | null> {
-    //     return Unverified.findAll({
-    //         where: {
-    //             status: 'active'
-    //         }
-    //     });
-    // }
-
     async getByAlias(alias: string): Promise<Unverified | null> {
        return Unverified.findOne({ where: { alias } });
     }
@@ -103,14 +95,17 @@ class UnverifiedPlayerClass {
     }): Promise<Unverified> {
         const now = new Date();
         const expiration = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-        
+        console.log("addUnverifiedPlayer expitation date:", expiration);
         return Unverified.create({ 
             alias: data.alias, 
             email: data.email,
             image_path: data.image_path || '../../public/assets/img/default.png'
         });
     }
+    async deleteUnverifiedPlayer(email: string): Promise<null> {
+        Unverified.destroy({ where: { email }});
+        return null;
+    }
 };
-
 export { Unverified };
 export default UnverifiedPlayerClass;

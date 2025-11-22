@@ -63,7 +63,6 @@ const userController = {
     },
     chekTokenRegister: async(request: FastifyRequest, reply: FastifyReply) => {
         const { token } = request.body as { token: string };
-        console.log("ENTRA A chekTokenRegister TOKEN:", token);
         //verifica la expiracio del token, laa dada del token(email)
         const result = await getEmailFromToken(token, request);
     
@@ -75,27 +74,29 @@ const userController = {
         }
         
         const email = result.email!;
-        const playerData = await unverifiedModel.getByEmail(email);
-        
-        console.log("Player Dataaa:", playerData?.dataValues);
+        const playerUnverData = await unverifiedModel.getByEmail(email);
+
         //afegir a la nova bbdd
-        if (!playerData) {
+        if (!playerUnverData) {
             return reply.status(404).send({
                 success: false,
                 error: 'Player data not found'
             });
-        }
-        //borrar de unverified_player el player creat correctament
-
+        }        
+        
         await playerModel.addPlayer({ 
-            alias: playerData.dataValues.alias,
-            email: playerData.dataValues.email,
-            image_path: playerData.dataValues.image_path,
+            alias: playerUnverData.dataValues.alias,
+            email: playerUnverData.dataValues.email,
+            image_path: playerUnverData.dataValues.image_path,
         });
+        //borrar de unverified_player el player pq ja s'ha verificat correctament
+        await unverifiedModel.deleteUnverifiedPlayer(email);
+        //fer login 
+        await playerModel.changeStatus(email, 1);
 
         reply.send({
             success: true,
-            data: playerData?.dataValues
+            data: playerUnverData?.dataValues
         });
     },
     login: async(request: FastifyRequest, reply: FastifyReply) => {
@@ -127,10 +128,27 @@ const userController = {
         const { token } = request.body as { token: string };
         console.log("ENTRA A chekTokenLogin TOKEN:", token);
         //DESMONTAR MGICK LINK, cojer tocken despues = 
-        //desmontar token i agafar email
-        //getemail amb totes les dades
-        //afegir les dades a la taula player si el token segueix sent valid si no mostra error 
+        //si el token segueix sent valid si no mostra error 
+        const result = await getEmailFromToken(token, request);
+    
+        if (!result.success) {
+            return reply.status(401).send({
+                success: false,
+                error: result.error
+            });
+        }
+        
+        const email = result.email!;
+        // const playerUnverData = await unverifiedModel.getByEmail(email);
+        const playerData = await playerModel.getByEmail(email);
+        
+        //fer login 
+        await playerModel.changeStatus(email, 1);
         //retornar all data de player
+        reply.send({
+            success: true,
+            data: playerData?.dataValues
+        });
     }
 };
 
