@@ -23,7 +23,7 @@
     let gameState = null;
 
     // IMPORTANT: HTTPS para WebSocket seguro
-    const wss = new WebSocket("wss://localhost:8080/ws");
+    const wss = new WebSocket("wss://localhost:8083/ws");
 
     wss.onopen = () => {
       info.textContent = "✅ Conectado al servidor seguro (HTTPS)";

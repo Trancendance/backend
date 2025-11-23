@@ -1,5 +1,5 @@
 TO DO LIST
-[] check exo que el link no hagi expirat fer prova canviar temps a min(els temps de expiracio es fa en 10 min pero en la bd se guarda mal arxiu unverified_user.)
+[] expiracio i crated at de la bbdd es crea malament ()
 [] cookie de sesio amb el login i en el register
 [] els comentaris que surten de INFO ? clen? saber que es logger transport pino-pretty
 [] error del /router fastify async
@@ -12,11 +12,6 @@ TO DO LIST
 [] borrar taules del temp chat 
 [] borrar el chat montat i comencar de nou 
 
-
-[] make total (front + back i funki game)
-[] push de carpeta trancendance
-[] push carpeta back de la meva branch al main
-[] push front
 
 NO PREGUNTI ACCEPT RISK CERTIFICAT ROOTCA
 make generate-ca
