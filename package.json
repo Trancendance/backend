@@ -5,10 +5,9 @@
   "scripts": {
     "build": "tsc",
     "dev:build": "tsc --watch",
-    "dev:gateway": "nodemon dist/microservices/gateway/server.js",
     "dev:websocket": "nodemon dist/microservices/websocket/server.js",
     "dev:fakegame": "nodemon dist/microservices/fakegame/server.js",
-    "dev": "npm-run-all --parallel dev:build dev:gateway dev:websocket dev:fakegame"
+    "dev": "npm-run-all --parallel dev:build dev:websocket dev:fakegame"
   },
   "dependencies": {
     "@fastify/jwt": "^10.0.0",

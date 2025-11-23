@@ -23,15 +23,15 @@ import('./api/models/unverified_users.js').then(( { Unverified } ) => {
   console.log("unnverified aaaaaaaaaaaaa");
 }).catch(console.error);
 
-import('./websocket/models/streamChat.js').then(({ default: StreamChat }) => {
-    StreamChat;
-    console.log('StreamChat model loaded');
-}).catch(console.error);
+// import('./websocket/models/streamChat.js').then(({ default: StreamChat }) => {
+//     StreamChat;
+//     console.log('StreamChat model loaded');
+// }).catch(console.error);
 
-import('./websocket/models/messageTempChat.js').then(({ default: TempChatMessage }) => {
-    TempChatMessage;
-    console.log('TempChatMessage model loaded');
-}).catch(console.error);
+// import('./websocket/models/messageTempChat.js').then(({ default: TempChatMessage }) => {
+//     TempChatMessage;
+//     console.log('TempChatMessage model loaded');
+// }).catch(console.error);
 
 export { sequelize };
 

@@ -1,12 +1,9 @@
 TO DO LIST
-[X] borrar dades del usuari verified de la taula unverified
-[x] al acabar chekTokenRegister ha déstar logejat canviar status a 1, funcio canvia a qualsevol status
-[] check exo que el link no hagi expirat fer prova canviar temps a min(els temps de expiracio es fa
-en 10 min pero en la bd se guarda mal arxiu unverified_user.)
-[x] si agafo el token que surt del register i el poso en ceck login hauria de retornar els vslos de l'usuari ?? pq ho fa
+[] check exo que el link no hagi expirat fer prova canviar temps a min(els temps de expiracio es fa en 10 min pero en la bd se guarda mal arxiu unverified_user.)
+[] cookie de sesio amb el login i en el register
 [] els comentaris que surten de INFO ? clen? saber que es logger transport pino-pretty
-[x] login 
-[] enviar token del login
+[] error del /router fastify async
+[] cookie de sesio amb el login i en el register
 [] borrar el data que es crea en backend
 [] revisar no fer nou arxius de rutes ja que register i login poden anar a part com class connect
 [] natejar arxiu user controllers hi ha moltes lineas 
@@ -14,6 +11,12 @@ en 10 min pero en la bd se guarda mal arxiu unverified_user.)
 ( crear emails fake: https://temp-mail.org/en/)
 [] borrar taules del temp chat 
 [] borrar el chat montat i comencar de nou 
+
+
+[] make total (front + back i funki game)
+[] push de carpeta trancendance
+[] push carpeta back de la meva branch al main
+[] push front
 
 NO PREGUNTI ACCEPT RISK CERTIFICAT ROOTCA
 make generate-ca
