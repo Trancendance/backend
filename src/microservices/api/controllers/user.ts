@@ -91,12 +91,15 @@ const userController = {
         });
         //borrar de unverified_player el player pq ja s'ha verificat correctament
         await unverifiedModel.deleteUnverifiedPlayer(email);
-        //fer login 
+        //fer login, canviar return per no return res ara nomes es per check
         await playerModel.changeStatus(email, 1);
+        
+        // Obtener el player final con todos los datos
+        const finalPlayer = await playerModel.getByEmail(email);
 
         reply.send({
             success: true,
-            data: playerUnverData?.dataValues
+            data: finalPlayer
         });
     },
     login: async(request: FastifyRequest, reply: FastifyReply) => {
@@ -104,15 +107,31 @@ const userController = {
             // 1. existeix envia token i succes, revisar mail ( url: ip/magick linc?token=<jwt token>)
             const { email } = request.body as { email: string };
 
-            const getPlayer: Promise<Unverified | null> = unverifiedModel.getByEmail(email);
-            const player = await getPlayer;
-            if (player && player?.email === email)
+            const player = await playerModel.getByEmail(email);
+
+            if (!player) {
+                return reply.status(404).send({
+                    success: false,
+                    message: `User with email ${email} not found`
+                });
+            }
+            
+            // El email siempre debería coincidir si lo buscaste por email
+            if (player.dataValues.email === email)
             {
                 const magicLink = await generateMagicLink(email, reply, false);
+                console.log('magic link generated en login', magicLink);
                 reply.send({
                     success: true,
-                    message: 'magic link sended',
-                    data: magicLink
+                    message: 'Magic link sent successfully',
+                    data: {
+                        magic_link: magicLink
+                    }
+                });
+            } else {
+                reply.status(404).send({
+                    success: false,
+                    message: `Doesn't find email: ${email}`
                 });
             }
         } catch (error: any){
@@ -126,7 +145,6 @@ const userController = {
     },
     chekTokenLogin: async(request: FastifyRequest, reply: FastifyReply) => {
         const { token } = request.body as { token: string };
-        console.log("ENTRA A chekTokenLogin TOKEN:", token);
         //DESMONTAR MGICK LINK, cojer tocken despues = 
         //si el token segueix sent valid si no mostra error 
         const result = await getEmailFromToken(token, request);

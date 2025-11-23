@@ -35,7 +35,7 @@ export const generateVerifiedToken = (email: string, reply: FastifyReply): Promi
       type: 'token_verified'
     },
     {
-      expiresIn: '72h'
+      expiresIn: '1h'
     }
   );
 };
@@ -45,7 +45,6 @@ export const verifyAndDecodeToken = async (token: string, request: FastifyReques
 ): Promise<{ success: boolean; payload?: TokenPayload; error?: string }> => {
   // Guardar el header original
   const originalAuth = request.headers.authorization;
-  console.log("DINS DE verifyAndDecodeToken", originalAuth);
 
   try {  
     // Temporalmente establecer nuestro token en el header
@@ -53,11 +52,9 @@ export const verifyAndDecodeToken = async (token: string, request: FastifyReques
     
     // Verificar con Fastify (automáticamente usa el mismo secret)
     const payload = await request.jwtVerify<TokenPayload>();
-    console.log("DINS DE try de verifyAndDecodeToken", payload);
 
     return { success: true, payload };
   } catch (error: any) {
-    console.log("DINS DE catch de verifyAndDecodeToken");
     if (error.code === 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED') {
       return { success: false, error: 'Token expired' };
     }
@@ -74,7 +71,6 @@ export const verifyAndDecodeToken = async (token: string, request: FastifyReques
 // Función específica para obtener email (uso común)
 export const getEmailFromToken = async (token: string, request: FastifyRequest
 ): Promise<{ success: boolean; email?: string; error?: string }> => {
-  console.log("DINSSSS DE getEmailFromToken", token);
   const result = await verifyAndDecodeToken(token, request);
   
   if (!result.success) {

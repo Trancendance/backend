@@ -81,7 +81,8 @@ class User {
     }
     
     async getByEmail(email: string): Promise<Player | null> {
-        return Player.findOne({ where: { email } });
+        const player = await Player.findOne({ where: { email } });
+        return player;
     }
 
     async addPlayer(data: { alias: string; email: string; image_path?: string;
@@ -90,11 +91,11 @@ class User {
                 image_path: data.image_path || '../../public/assets/img/default.png',
 
             });
-        }
+    }
     async changeStatus(email: string, newStatus: number): Promise<null> {
         Player.update({ status: newStatus },
             { where: { email }});
-            return null;
+        return (null);
     }
 };
 
