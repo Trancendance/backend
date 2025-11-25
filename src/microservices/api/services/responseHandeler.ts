@@ -51,9 +51,10 @@ export class ResponseHandler {
 
   static sendConflict(
     reply: FastifyReply, 
-    message: string
+    message: string | { error : string }
   ): void {
-    this.sendError(reply, 409, message);
+    const errorMessage = typeof message === 'string' ? message : message.error;
+    this.sendError(reply, 409, errorMessage);
   }
 
   static sendNotFound(
