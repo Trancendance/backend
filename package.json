@@ -7,7 +7,8 @@
     "dev:build": "tsc --watch",
     "dev:websocket": "nodemon dist/microservices/websocket/server.js",
     "dev:fakegame": "nodemon dist/microservices/fakegame/server.js",
-    "dev": "npm-run-all --parallel dev:build dev:websocket dev:fakegame"
+    "dev:api": "nodemon dist/microservices/api/server.js",
+    "dev": "npm-run-all --parallel dev:build dev:websocket dev:fakegame dev:api"
   },
   "dependencies": {
     "@fastify/jwt": "^10.0.0",
@@ -18,7 +19,7 @@
     "sequelize": "^6.37.7",
     "sqlite3": "^5.1.7",
     "yup": "^1.7.1",
-	"pino-pretty": "^13.1.2"
+	  "pino-pretty": "^13.1.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

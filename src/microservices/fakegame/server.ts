@@ -1,9 +1,7 @@
 // backend/src/microservices/websocket/server.js
-import Fastify from "fastify";
+import fastify from '../fastify.js';
 import websocketPlugin from "@fastify/websocket";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+
 
 interface ServerResponse {
   players: { id: number; score: number; position: { y: number } }[];
@@ -107,31 +105,6 @@ class Game {
     }
   };
 }
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Certificats HTTPS
-const keyPath = path.join(__dirname, "../../../certs/fd_transcendence.key");
-const certPath = path.join(__dirname, "../../../certs/fd_transcendence.crt");
-
-const httpsOptions = {
-  key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath),
-};
-
-const fastify = Fastify({
-  logger: {
-    transport: {
-      target: "pino-pretty",
-      options: {
-        translateTime: false,
-        ignore: "time,hostname,pid",
-      },
-    },
-  },
-  https: httpsOptions,
-});
 
 await fastify.register(websocketPlugin);
 const fGame = new Game();

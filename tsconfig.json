@@ -2,12 +2,13 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "lib": ["ES2022", "DOM"],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
@@ -21,8 +22,7 @@
     "src/microservices/api/**/*.ts",
     "src/microservices/sequelize.ts",
     "src/microservices/websocket/**/*.ts",
-    "src/microservices/gateway/**/*", 
-    "src/microservices/game/**/*"
+    "src/microservices/fakegame/**/*"
   ],
   "exclude": [
     "node_modules",

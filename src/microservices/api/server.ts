@@ -1,38 +1,17 @@
 // backend/src/microservices/api/server.ts
+import fastify from '../fastify.js';
 import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import fjwt from "@fastify/jwt";
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { sequelize } from '../sequelize.js';
 import { initializeAllModels } from '../sequelize.js';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3000;
-
-// Certificats HTTPS
-const keyPath = path.join(__dirname, "../../../certs/fd_transcendence.key");
-const certPath = path.join(__dirname, "../../../certs/fd_transcendence.crt");
-
-const httpsOptions = {
-  key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath),
-};
-
-const fastify = Fastify({
-  logger: {
-    transport: {
-      target: "pino-pretty",
-      options: {
-        translateTime: false,
-        ignore: "time,hostname,pid",
-      },
-    },
-  },
-  https: httpsOptions,
-});
 
 // CORS millorar poc segur, deixa entrar a tothom
 fastify.addHook(
@@ -84,9 +63,7 @@ fastify.get("/health", async (request: FastifyRequest, reply: FastifyReply) => {
 const loadRouters = async () => {
   const routerFiles = fs.readdirSync(path.resolve(__dirname, "./routers"));
   for (const file of routerFiles) {
-    if (!file.match(/\.(js|ts)$/)) continue;
-
-    const name = `/${file.replace(/\.(js|ts)$/, "").replace(/index/, "")}`;
+    if (!file.match(/\.(js)$/)) continue;
 
     try {
       const name = `/${file.replace(/\.js$/, '').replace(/index/, '')}`;
@@ -101,7 +78,6 @@ const loadRouters = async () => {
     }
   }
 };
-
 // Status page
 fastify.get("/", async (request: FastifyRequest, reply: FastifyReply) => {
   reply.type("text/html").send(`
