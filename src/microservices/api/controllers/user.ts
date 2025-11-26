@@ -5,7 +5,7 @@ import { checkUserExistence, getUserExistenceError } from "./userUtils.js";
 import { RegisterInput, registerSchema } from "./userValidation.js";
 import { getEmailFromToken } from "../services/auth.js";
 import { ResponseHandler } from "../services/responseHandeler.js";
-import { MagicLinkService } from "./magicLink.js";
+import { MagicLinkService } from "../services/magicLink.js";
 
 const unverifiedModel = new UnverifiedPlayerClass(null);
 const playerModel = new User(null);
