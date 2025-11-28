@@ -59,6 +59,10 @@ fastify.get("/health", async (request: FastifyRequest, reply: FastifyReply) => {
     });
   }
 });
+fastify.get('/test', async (request, reply) => {
+    console.log('✅ Test route hit!');
+    return { success: true, message: 'Test route working' };
+});
 
 const loadRouters = async () => {
   const routerFiles = fs.readdirSync(path.resolve(__dirname, "./routers"));
@@ -70,9 +74,22 @@ const loadRouters = async () => {
       const modulePath = `./routers/${file}`;
       const routerModule = await import(modulePath);
 
-      fastify.register(routerModule.default || routerModule, { prefix: name });
-
-      console.log("Loaded router", name, "from", file);
+      // fastify.register(routerModule.default || routerModule, { prefix: name });
+      const router = routerModule.default || routerModule;
+      
+      if (typeof router === 'function') {
+        fastify.register(router, { prefix: name });
+        console.log("✅ Loaded router", name, "from", file);
+        
+        // Debug: mostrar rutas registradas
+        fastify.ready(() => {
+          console.log("🛣️  Available routes:");
+          fastify.printRoutes();
+        });
+        
+      } else {
+        console.warn("⚠️  Router", file, "does not export a valid function");
+      }
     } catch (error: any) {
       console.error(`ERROR loading route of file ${file} error:`, error);
     }
@@ -96,11 +113,14 @@ fastify.get("/", async (request: FastifyRequest, reply: FastifyReply) => {
 
 const start = async () => {
   try {
+     console.log('🔌 Conectando a la base de datos...');
     await sequelize.authenticate();
+    console.log('✅ Conectado a la base de datos');
     await initializeAllModels();
-
+    console.log('✅ Modelos inicializados');
     // await sequelize.sync({ force: false });//Crea les taules automàticament segons els models // force: false para no borrar datos existentes
     await loadRouters();//carrega le srutes
+    console.log('✅ Routers cargados');
     await fastify.listen({ port: Number(PORT), host: '0.0.0.0' });//inicia servidor
     console.log(`🚀 API Server en https://localhost:${PORT}`);
   } catch (err) {
